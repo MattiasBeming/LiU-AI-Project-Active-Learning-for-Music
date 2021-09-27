@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -m unittest discover test -p 'test_*.py'",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} src/main.py",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
