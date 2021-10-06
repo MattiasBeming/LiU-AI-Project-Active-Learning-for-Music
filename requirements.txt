@@ -3,3 +3,5 @@ pycodestyle==2.7.0
 PySimpleGUI==4.47.0
 scikit-learn==1.0
 pandas==1.3.3
+PyAudio==0.2.11
+pydub==0.25.1
