@@ -31,15 +31,6 @@ def max_std_sampling(pred, batchsize):
 # ----------------------- Output Greedy Sampling ------------------------ #
 ###########################################################################
 
-unlabeled_output = np.array(
-    [[243,  3173],
-     [525,  2997]])
-
-labeled_data = np.array(
-    [[682, 2644],
-     [277, 2651],
-     [396, 2640]])
-
 
 def output_greedy_sampling(labeled_data, unlabeled_output, batch_size):
     """
@@ -60,19 +51,9 @@ def output_greedy_sampling(labeled_data, unlabeled_output, batch_size):
     return np.argpartition(min_distances, -batch_size)[-batch_size:]
 
 
-out_indices = output_greedy_sampling(labeled_data, unlabeled_output, 2)
-
-
 ###########################################################################
 # ------------------------ Input Greedy Sampling ------------------------ #
 ###########################################################################
-
-# Read feature data and get N columns to make data more manageable
-feature_data = pd.read_csv(
-    "~/Universitet/TDDE19/emo-music-features/default_features/2.csv", sep=";")
-N = 3
-labeled_feat = feature_data.iloc[0:3, 0:N]
-unlabeled_feat = feature_data.iloc[4:7, 0:N]
 
 
 def input_greedy_sampling(labeled_feat, unlabeled_feat, batch_size):
@@ -92,4 +73,36 @@ def input_greedy_sampling(labeled_feat, unlabeled_feat, batch_size):
     return np.argpartition(min_distances, -batch_size)[-batch_size:]
 
 
-in_indices = input_greedy_sampling(labeled_feat, unlabeled_feat, 2)
+###########################################################################
+# ----------------- Input And Output Greedy Sampling -------------------- #
+###########################################################################
+
+
+def input_output_greedy_sampling(
+    labeled_feat, unlabeled_feat, labeled_data, unlabeled_output, batch_size
+):
+    """
+    :param labeled_feat: Feature data from labeled set in ML
+    :param unlabeled_feat: Feature data from unlabeled set in ML
+    :param labeled_data: Labeled data points from storage
+    :param unlabeled_output: Unlabeled data points with predictions from ML
+    model
+    :param batch_size: Number of points to query label for
+    :return: Indexes for the points to query on
+    """
+    # Compute the distance from all unlabeled feature data to
+    # closest labeled feature data point and assign minimum one to each point
+    min_distances_in = np.min(spatial.distance.cdist(
+        unlabeled_feat, labeled_feat), axis=1)
+
+    # Compute the distance from all unlabeled output data to the closest
+    # labeled data point and assign minimum one to each point
+    min_distances_out = np.min(spatial.distance.cdist(
+        unlabeled_output, labeled_data), axis=1)
+
+    # Choose min at each index comparing both arrays
+    min_distances = np.minimum(min_distances_in, min_distances_out)
+
+    # Then select the batch_size number of samples that have the largest
+    # distance and return indices
+    return np.argpartition(min_distances, -batch_size)[-batch_size:]
