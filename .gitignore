@@ -154,3 +154,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+#user defined
+data/*
+features_librosa*
