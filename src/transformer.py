@@ -3,6 +3,8 @@ from pathlib import Path
 import pandas as pd
 import warnings
 
+NO_OF_INITIAL_UNUSED_SAMPLES = 30
+
 
 def load_songs(file_indexes=range(1, 1000)):
     """
@@ -11,7 +13,7 @@ def load_songs(file_indexes=range(1, 1000)):
         file_indexes: A list of the indexes of the files to be loaded.
                 Defaults to all indexes.
     Output:
-        data: An 3D numpy array containing the song data.
+        data: An 3D numpy array containing the song data. Format: [song_no, time, feature]
         found_inds: A list of all the indexes from 'file_indexes' that has a
                 corresponding data file.
                 (Not all number from 1 to 1000 have a corresponding file.)
@@ -20,7 +22,7 @@ def load_songs(file_indexes=range(1, 1000)):
     first = True
     for i in file_indexes:
         file_path = Path(
-            f"./../../emo-music-features/default_features/{i}.csv")
+            f"./../emo-music-features/default_features/{i}.csv")
         if file_path.is_file():
             found_inds.append(i)
             data_temp = np.genfromtxt(file_path, delimiter=';', skip_header=1)
@@ -32,6 +34,8 @@ def load_songs(file_indexes=range(1, 1000)):
             else:
                 data = np.concatenate((data, data_temp), axis=0)
 
+    # Remove first 30 samples, since they have no corresponding y-label.
+    data = data[:, NO_OF_INITIAL_UNUSED_SAMPLES:, :]
     return(data, found_inds)
 
 
