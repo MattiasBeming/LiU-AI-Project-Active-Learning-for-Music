@@ -1,9 +1,26 @@
 import numpy as np  # Version 1.19.1
 import pandas as pd
 import warnings
-
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 from transformer import *
+
+
+def k_neighbors(X, y_arousal, y_valence, k):
+    """
+    :param X: Feature data in numpy array with
+              shape (n_timestamps*n_songs, n_features)
+    :param y_arousal: Arousal annotations belonging to the songs and timestamps
+                      in X. 1D numpy array with num_songs*time_samples entries.
+    :param y_valence: Valence annotations belonging to the songs and timestamps
+                      in X. 1D numpy array with num_songs*time_samples entries.
+    :param k: Number of neighbors to look at
+    :return: KNeighborsRegressor fit using X, y and k
+    """
+    y = np.column_stack((y_arousal, y_valence))
+    neigh = KNeighborsRegressor(n_neighbors=k)
+    neigh = neigh.fit(X, y)
+    return neigh
 
 
 def linear_regression(X, y_arousal, y_valence):
