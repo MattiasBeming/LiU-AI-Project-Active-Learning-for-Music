@@ -3,5 +3,7 @@
     "python.formatting.provider": "autopep8",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
-    "python.linting.pycodestyleEnabled": true
+    "python.linting.pycodestyleEnabled": true,
+    "autoDocstring.docstringFormat": "google",
+    "autoDocstring.startOnNewLine": true
 }
