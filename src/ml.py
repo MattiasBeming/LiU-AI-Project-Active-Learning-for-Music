@@ -4,11 +4,32 @@ import warnings
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.neural_network import MLPRegressor
 from transformer import *
 from sklearn.ensemble import VotingRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from storage import Dataset
+
+
+def neural_network(ds: Dataset, hyper_parameters: dict = {}, train=True):
+    """
+       Creates a neural network using sklearn's MLPRegressor.
+
+       Args:
+        ds (Dataset): Dataset to fit on. May be `None` if `train=False`.
+        hyper_parameters (dict): Should contain all desired hyperparameters.
+            These will be forwarded as keyword arguments to the returned
+            regressor instance. Defaults to empty dict.
+        train (bool, optional): If true, fit to ds. Defaults to True.
+
+       Returns:
+           [MLPRegressor]: A new MLPRegressor estimator.
+       """
+    if train:
+        return MLPRegressor(**hyper_parameters).fit(
+            ds.get_data(), ds.get_labels())
+    return MLPRegressor(**hyper_parameters)
 
 
 def k_neighbors(ds: Dataset, hyper_parameters: dict = {}, train=True):
@@ -148,7 +169,7 @@ def correlation(path_arousal, path_valence):
     Returns:
         [np.ndarray]: A 1D numpy array containing the dynamic covariances
             for each song. If the file paths were incorrect, this
-            will be set to -1.
+            will be set to - 1.
     """
     if path_arousal.is_file() and path_valence.is_file():
         df1 = pd.read_csv(path_arousal, delimiter=",")
