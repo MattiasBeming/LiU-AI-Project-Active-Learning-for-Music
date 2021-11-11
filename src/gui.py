@@ -2,6 +2,8 @@ import PySimpleGUI as sg
 from threading import Lock
 import uuid
 
+import windows
+
 ################
 # WINDOW AGENT #
 ################
@@ -267,3 +269,26 @@ def is_alive(ref):
         return False
 
     return _get_window_agent(ref).alive
+
+
+###########
+# WINDOWS #
+###########
+
+
+def query_prior():
+    """
+    Prompts the user for their current emotional state in a new window. The
+    resulting output can be fetched with wait_result(), and will be a tuple on
+    the form: (float: arousal, float: valence).
+
+    Returns:
+        uuid.UUID: The uuid of the new window.
+    """
+
+    agent = _new_window_agent(
+        windows.init_query_prior,
+        windows.handle_query_prior
+    )
+
+    return agent.ref
