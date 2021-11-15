@@ -11,17 +11,20 @@ import windows
 
 class WindowAgent:
 
-    def __init__(self, window_initializer, event_processor):
+    def __init__(self, window_initializer, event_processor, init_args):
         """
         Creates a new window agent.
 
         Args:
             window_initializer (function): The function to use when
-                initializing this agent's window. The function should create a
-                new window and return it. More values may be returned after
-                the window if a tuple is used - these values will then be
-                stored in the agent, and passed to the event_processor when
-                invoked through the update() function.
+                initializing this agent's window. The function may take an
+                arbritrary number of arguments, and the init_args list will
+                be spread into it when the function is invoked from start().
+
+                The function should create a new window and return it. More
+                values may be returned after the window if a tuple is used -
+                these values will then be stored in the agent, and passed to
+                the event_processor when invoked through the update() function.
             event_processor (function): The function to use for handling
                 window events. As input parameters, the function should take a
                 window, an event, and a dict of values associated with the
@@ -33,11 +36,13 @@ class WindowAgent:
                 first value should be a boolean, and the second value will
                 be stored as the agent's result. The first value should be
                 true if the window should be closed due to the event/values.
+            init_args (list): The arguments to send to the window_initializer.
         """
         self.ref = uuid.uuid4()
         self.window = None
         self.window_initializer = window_initializer
         self.event_processor = event_processor
+        self.init_args = init_args
         self.mutex = Lock()
         self.result = None
 
@@ -49,7 +54,7 @@ class WindowAgent:
         Starts this agent by calling its window initializer. This method
         creates the agent's window, and should be called before usage.
         """
-        wi_res = self.window_initializer()
+        wi_res = self.window_initializer(*self.init_args)
 
         if type(wi_res) in (tuple, list):
             self.window, *self.args = wi_res
@@ -127,9 +132,9 @@ _store_mutex = Lock()
 _agents = {}
 
 
-def _new_window_agent(window_initializer, event_processor):
+def _new_window_agent(window_initializer, event_processor, *init_args):
 
-    agent = WindowAgent(window_initializer, event_processor)
+    agent = WindowAgent(window_initializer, event_processor, init_args)
 
     _store_mutex.acquire()
     _agents[agent.ref] = agent
