@@ -1,9 +1,16 @@
 import os
-from sklearn.decomposition import PCA
-import pandas as pd
 from pathlib import Path
-from sklearn.preprocessing import StandardScaler
+from enum import Enum
 import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import VarianceThreshold
+
+
+class Method(Enum):
+    PCA = 1
+    VT = 2
 
 
 def split_data(data, tr_size):
@@ -62,7 +69,26 @@ def pca(tr, te, percent):
     return tr_pca, te_pca
 
 
-def feature_selection(filepath, tr_size=0.8, pca_percent=0.99):
+def variance_threshold(tr, te, threshold):
+    """
+    Perform variance threshold. Removes features based on columns-wise
+    variance.
+
+    Args:
+        threshold (float): if variance <= threshold removes that feature
+    """
+    selector = VarianceThreshold(threshold=threshold)
+    tr_vt = selector.fit_transform(tr.iloc[:, 2:].values[:])
+    te_vt = selector.transform(te.iloc[:, 2:].values[:])
+
+    print((f"\n{tr_vt.shape[1]} number of features "
+           f"has higher variance than threshold: {threshold}"))
+
+    return tr_vt, te_vt
+
+
+def feature_selection(filepath, tr_size=0.8, method=Method.PCA,
+                      pca_percent=0.99, threshold=100):
     """
     Split the data into training and test, and perform PCA on the data.
 
@@ -73,6 +99,7 @@ def feature_selection(filepath, tr_size=0.8, pca_percent=0.99):
                                        how much variance does the
                                        components hold.
     """
+    print(f"Running method: {method.name}...")
     data = pd.read_csv(filepath, index_col=[0], header=[0, 1, 2])
 
     print(f"Shape of data before split: {data.shape}")
@@ -84,8 +111,13 @@ def feature_selection(filepath, tr_size=0.8, pca_percent=0.99):
     tr_idx = np.array(tr.iloc[:, 0:2].values[:])
     te_idx = np.array(te.iloc[:, 0:2].values[:])
 
-    print(f"Shape pre PCA: tr shape: {tr.shape}, te shape: {te.shape}")
-    tr, te = pca(tr, te, pca_percent)
+    if method == Method.PCA:
+        print(f"Shape pre PCA: tr shape: {tr.shape}, te shape: {te.shape}")
+        tr, te = pca(tr, te, pca_percent)
+
+    if method == Method.VT:
+        print(f"Shape pre VT: tr shape: {tr.shape}, te shape: {te.shape}")
+        tr, te = variance_threshold(tr, te, threshold)
 
     # Add song_id and sample_id columns to training and test data
     tr = np.hstack((tr_idx, tr))
@@ -95,19 +127,19 @@ def feature_selection(filepath, tr_size=0.8, pca_percent=0.99):
     tr[:, 0:2] = tr[:, 0:2].astype('int')
     te[:, 0:2] = te[:, 0:2].astype('int')
 
-    print((f"Shape post PCA with {pca_percent} variance, "
-          f"tr shape: {tr.shape}, te shape: {te.shape}"))
+    print((f"Shape post selection: "
+           f"tr shape: {tr.shape}, te shape: {te.shape}"))
 
     file = str(filepath)[:-4]
-    np.save(Path(file + "_train_pca.npy"), tr)
-    np.save(Path(file + "_test_pca.npy"), te)
+    np.save(Path(file + f"_train_{method.name}.npy"), tr)
+    np.save(Path(file + f"_test_{method.name}.npy"), te)
     return
 
 
 def main():
     os.chdir('./../')  # Change to parent directory
     filepath = Path("data/features_librosa.csv")
-    feature_selection(filepath, 0.8, 0.99)
+    feature_selection(filepath, 0.8, Method.VT, 0.99, 100)
 
 
 if __name__ == "__main__":
