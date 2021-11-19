@@ -11,7 +11,8 @@ import windows
 
 class WindowAgent:
 
-    def __init__(self, window_initializer, event_processor, init_args):
+    def __init__(self, window_initializer, event_processor,
+                 result_processor, allow_native_close, init_args):
         """
         Creates a new window agent.
 
@@ -36,12 +37,22 @@ class WindowAgent:
                 first value should be a boolean, and the second value will
                 be stored as the agent's result. The first value should be
                 true if the window should be closed due to the event/values.
+            result_processor (function): The function to use for processing
+                the final result before returning it from wait_result(). As
+                input it is expected to take a result on the same form as the
+                outputted result from event_processor. The returned value
+                should be a processed version of this result.
+            allow_native_close (bool): If True, the user may close the window
+                natively, i.e. by pressing the exit button on the window
+                border.
             init_args (list): The arguments to send to the window_initializer.
         """
         self.ref = uuid.uuid4()
         self.window = None
         self.window_initializer = window_initializer
         self.event_processor = event_processor
+        self.result_processor = result_processor
+        self.allow_native_close = allow_native_close
         self.init_args = init_args
         self.mutex = Lock()
         self.result = None
@@ -79,11 +90,17 @@ class WindowAgent:
 
         # Check for exit
         if event == sg.WINDOW_CLOSED or event == "Quit":
-            return self.exit()
+            if self.allow_native_close:
+                return self.exit()
+            return
 
         # Process events
-        close, self.result = self.event_processor(
+        close, result = self.event_processor(
             self.window, event, values, *self.args)
+
+        # Update result if there was one
+        if result is not None:
+            self.result = result
 
         # Check for window closure
         if close:
@@ -121,7 +138,7 @@ class WindowAgent:
         self.mutex.acquire()
         r = self.result
         self.mutex.release()
-        return r
+        return self.result_processor(r)
 
 
 #################
@@ -132,9 +149,11 @@ _store_mutex = Lock()
 _agents = {}
 
 
-def _new_window_agent(window_initializer, event_processor, *init_args):
+def _new_window_agent(window_initializer, event_processor,
+                      result_processor, allow_native_close, *init_args):
 
-    agent = WindowAgent(window_initializer, event_processor, init_args)
+    agent = WindowAgent(window_initializer, event_processor,
+                        result_processor, allow_native_close, init_args)
 
     _store_mutex.acquire()
     _agents[agent.ref] = agent
@@ -186,7 +205,7 @@ def update_windows():
     _store_mutex.release()
 
     # Poll window events
-    window, event, values = sg.read_all_windows(100)
+    window, event, values = sg.read_all_windows(50)
 
     for ref in refs:
         agent = _get_window_agent(ref)
@@ -205,7 +224,7 @@ def update_windows():
             continue
 
         # Check if the current event belongs to the agent
-        if agent.window != window:
+        if event != sg.TIMEOUT_EVENT and agent.window != window:
             continue
 
         # Update agent with current event
@@ -293,7 +312,9 @@ def query_prior():
 
     agent = _new_window_agent(
         windows.init_query_prior,
-        windows.handle_query_prior
+        windows.handle_query_prior,
+        windows.process_result_default,
+        True
     )
 
     return agent.ref
