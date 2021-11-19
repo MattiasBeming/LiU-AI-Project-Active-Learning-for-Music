@@ -318,3 +318,39 @@ def query_prior():
     )
 
     return agent.ref
+
+
+def query_dynamic(file_path, mode, sample_rate=2):
+    """
+    Opens a windows where the user must record either arousal or valence over
+    time, while a song is playing. The resulting output can be fetched with
+    wait_result(), where the result will be a 2-dimensional numpy array with
+    two columns. The first column will contain evenly spaced time points for
+    the entire song in seconds according to the specified sample_rate. The
+    second column will contain the captured input values at those time points.
+
+    Args:
+        file_path (pathlib.Path): A path to the music file to play.
+        mode (str): Either "arousal" or "valence".
+        sample_rate (int, optional): The number of output samples per second.
+            Defaults to 2.
+
+    Raises:
+        ValueError: If the specified mode was not valid.
+
+    Returns:
+        uuid.UUID: The uuid of the new window.
+    """
+
+    if mode not in (windows.QUERY_MODE_AROUSAL, windows.QUERY_MODE_VALENCE):
+        raise ValueError(f"Invalid dynami query mode: '{mode}'")
+
+    agent = _new_window_agent(
+        windows.init_query_dynamic,
+        windows.handle_query_dynamic,
+        windows.process_result_dynamic,
+        False,
+        file_path, mode, sample_rate
+    )
+
+    return agent.ref
