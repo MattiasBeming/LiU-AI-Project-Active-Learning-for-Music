@@ -24,6 +24,7 @@ def load_features(npy_path):
         [found_song_ids, data.iloc[:, 1]], names=["song_id", "sample"])
     data = data.iloc[:, 2:]
     data.index = index
+
     return data, np.unique(found_song_ids)
 
 
