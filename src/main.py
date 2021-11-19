@@ -1,4 +1,5 @@
 from threading import Thread
+import audio
 import gui
 
 #################
@@ -13,6 +14,9 @@ def main():
 #########################################
 # START APPLICATION & RUN MAIN FUNCTION #
 #########################################
+
+# Initialize audio
+audio.init()
 
 # Start application
 _app = Thread(target=main)
@@ -31,3 +35,6 @@ print("The GUI loop on main thread was exited " +
 print("Destroying GUI...")
 gui.destroy()
 print("The GUI was successfully destroyed!")
+
+# Deinitialize audio
+audio.deinit()
