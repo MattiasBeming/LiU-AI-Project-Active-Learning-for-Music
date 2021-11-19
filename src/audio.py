@@ -11,6 +11,9 @@ paused = False
 mutex = Lock()
 worker = None
 
+_clip_time_total = 0
+_clip_time_elapsed = 0
+
 
 def init():
     global player
@@ -63,27 +66,55 @@ def is_paused():
 
 
 def stop():
-    global running
+    global running, _clip_time_total, _clip_time_elapsed
     resume()
+    _clip_time_total = 0
+    _clip_time_elapsed = 0
     running = False
 
 
 def deinit():
+    stop()
     player.terminate()
+    if worker is not None:
+        worker.join()
+
+
+def time_info():
+    """
+    Returns the full clip length in seconds, and the current elapsed time.
+
+    Returns:
+        (float, float): The full clip length in seconds, and the elapsed time.
+    """
+    return _clip_time_total, _clip_time_elapsed
 
 
 def _stream_clip(stream, clip):
-    global running, worker
+    global running, worker, _clip_time_total, _clip_time_elapsed
 
     # Data offset
     offset = 0
 
+    # Time handling
+    _clip_time_total = clip.duration_seconds
+    _clip_time_elapsed = 0
+
+    # Current chunk
+    current_chunk = b""
+
     # Stream audio
     running = True
     while running and offset < len(clip.raw_data):
+
+        # Stream current chunk
+        stream.write(current_chunk)
+
+        # Read next chunk
         mutex.acquire()
-        stream.write(clip.raw_data[offset:(offset+CHUNK-1)])
+        current_chunk = clip.raw_data[offset:(offset+CHUNK-1)]
         offset += CHUNK
+        _clip_time_elapsed = offset / (clip.sample_width * clip.frame_rate)
         mutex.release()
     running = False
 
