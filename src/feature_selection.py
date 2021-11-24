@@ -7,8 +7,10 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 
+# OBS, Run this file from src
 
 class Method(Enum):
+    D = 0 # Default methods - no feature selection
     PCA = 1
     VT = 2
 
@@ -139,7 +141,7 @@ def feature_selection(filepath, tr_size=0.8, method=Method.PCA,
 def main():
     os.chdir('./../')  # Change to parent directory
     filepath = Path("data/features_librosa.csv")
-    feature_selection(filepath, 0.8, Method.VT, 0.99, 100)
+    feature_selection(filepath, 0.8, Method.PCA, 0.99, 100)
 
 
 if __name__ == "__main__":
