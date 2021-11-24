@@ -89,21 +89,19 @@ class Dataset():
         self._found_inds = []
 
 
-def load_dataset(name, npy_path, path_arousal, path_valence):
+def load_dataset(name, npy_path, path_arousal, path_valence, path_arousal_std, path_valence_std):
     """
     Loads the songs with IDs in 'songs' found in the paths
     into a dictionary with key='name'.
 
     Args:
         name (str): The desired name of the dataset.
-        npy_folder_path (pathlib.Path): A path leading to the
+        npy_path (pathlib.Path): A path leading to the
             folder with the features in .NPY-format.
         path_arousal (pathlib.Path): A path leading to the
             file with the arousal-values in .CSV-format.
         path_valence (pathlib.Path): A path leading to the
             file with the valence-values in .CSV-format.
-        songs (list, optional): A list containing the desired songs to load.
-            Defaults to range(1, 101).
     """
     global _datasets
 
@@ -111,16 +109,20 @@ def load_dataset(name, npy_path, path_arousal, path_valence):
     data, found_song_ids = load_features(npy_path)
 
     # Load annotations from corresponding .CSV files.
-    arousal, valence = load_annotations(path_arousal, path_valence)
+    arousal, valence  = load_annotations(path_arousal, path_valence)
+    arousal_std, valence_std  = load_annotations(path_arousal_std, path_valence_std)
 
-    # Extract labels corresponding to 'found_inds'.
+    # Remove song ids from 'found_song_ids'
+    found_song_ids = remove_high_std_songs_from(found_song_ids, arousal_std, valence_std)
+
+    # Extract labels corresponding to 'found_song_ids'.
     labels_arousal, labels_valence = extract_samples(
         arousal, valence, found_song_ids)
 
     # Flatten data from 2D to 1D.
     labels_arousal, labels_valence = flatten_labels(
         labels_arousal, labels_valence)
-
+    
     # Create and store the dataset.
     dataset = Dataset(data, labels_arousal, labels_valence, found_song_ids)
     _datasets[name] = dataset
