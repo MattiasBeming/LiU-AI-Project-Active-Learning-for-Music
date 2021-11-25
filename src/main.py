@@ -1,6 +1,6 @@
 from threading import Thread
-import audio
-import gui
+from api import audio
+from api import gui
 
 #################
 # MAIN FUNCTION #

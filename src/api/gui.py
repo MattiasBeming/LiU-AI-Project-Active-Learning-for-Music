@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 from threading import Lock
 import uuid
 
-import windows
+from api import windows
 
 ################
 # WINDOW AGENT #
