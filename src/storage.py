@@ -49,10 +49,10 @@ class Dataset():
 
     def get_arousal_labels(self):
         """
-        Returns the labels for valence for this dataset.
+        Returns the labels for arousal for this dataset.
 
         Raises:
-            ValueError: If 'labels_valence' is None.
+            ValueError: If 'labels_arousal' is None.
 
         Returns:
             pandas.DataFrame: A 1D pandas dataframe with labels for arousal.
@@ -79,6 +79,24 @@ class Dataset():
             raise ValueError("Data was fetched before it was loaded. " +
                              "Do load_dataset() before calling get_dataset().")
 
+    def get_labels(self):
+        """
+        Returns the concatinated labels for arousal and valence.
+
+        Raises:
+            ValueError: If 'labels_arousal' or 'labels_valence' is None.
+
+        Returns:
+            np.ndarray: A 2D numpy array with labels for arousal and valence.
+        """
+        if (self._labels_arousal is not None and
+                self._labels_valence is not None):
+            return np.column_stack(
+                (self._labels_arousal, self._labels_valence))
+        else:
+            raise ValueError("Data was fetched before it was loaded. " +
+                             "Do load_dataset() before calling get_dataset().")
+
     def delete_data(self):
         """
         Deletes the class members.
@@ -89,7 +107,11 @@ class Dataset():
         self._found_inds = []
 
 
-def load_dataset(name, npy_path, path_arousal, path_valence, path_arousal_std, path_valence_std):
+def load_dataset(name,
+                 npy_path,
+                 path_arousal, path_valence,
+                 path_arousal_std, path_valence_std,
+                 remove_unlabeled_data_=True):
     """
     Loads the songs with IDs in 'songs' found in the paths
     into a dictionary with key='name'.
@@ -102,6 +124,12 @@ def load_dataset(name, npy_path, path_arousal, path_valence, path_arousal_std, p
             file with the arousal-values in .CSV-format.
         path_valence (pathlib.Path): A path leading to the
             file with the valence-values in .CSV-format.
+        path_arousal_std (pathlib.Path): A path leading to the
+            file with the arousal-std-values in .CSV-format.
+        path_valence_std (pathlib.Path): A path leading to the
+            file with the valence-std-values in .CSV-format.
+        remove_unlabeled_data_ (bool): Run function 'remove_unlabeled_data' to
+            remove unlabeled data. Default: True.
     """
     global _datasets
 
@@ -109,12 +137,15 @@ def load_dataset(name, npy_path, path_arousal, path_valence, path_arousal_std, p
     data, found_song_ids = load_features(npy_path)
 
     # Load annotations from corresponding .CSV files.
-    arousal, valence  = load_annotations(path_arousal, path_valence)
-    arousal_std, valence_std  = load_annotations(path_arousal_std, path_valence_std)
+    arousal, valence = load_annotations(path_arousal, path_valence)
+    arousal_std, valence_std = load_annotations(
+        path_arousal_std, path_valence_std)
 
     # Remove song ids from 'found_song_ids'
-    found_song_ids = remove_high_std_songs_from(found_song_ids, arousal_std, valence_std)
-
+    data, found_song_ids = remove_high_std_songs_from(data,
+                                                      found_song_ids,
+                                                      arousal_std,
+                                                      valence_std)
     # Extract labels corresponding to 'found_song_ids'.
     labels_arousal, labels_valence = extract_samples(
         arousal, valence, found_song_ids)
@@ -122,7 +153,10 @@ def load_dataset(name, npy_path, path_arousal, path_valence, path_arousal_std, p
     # Flatten data from 2D to 1D.
     labels_arousal, labels_valence = flatten_labels(
         labels_arousal, labels_valence)
-    
+
+    if remove_unlabeled_data_:
+        data = remove_unlabeled_data(data)
+
     # Create and store the dataset.
     dataset = Dataset(data, labels_arousal, labels_valence, found_song_ids)
     _datasets[name] = dataset
