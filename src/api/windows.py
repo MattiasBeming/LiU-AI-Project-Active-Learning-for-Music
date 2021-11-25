@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 import numpy as np
 from pathlib import Path
 
-import audio as ap
+from api import audio as ap
 
 #############
 # CONSTANTS #

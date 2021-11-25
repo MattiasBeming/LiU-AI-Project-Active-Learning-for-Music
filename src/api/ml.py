@@ -5,11 +5,11 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.neural_network import MLPRegressor
-from transformer import *
+from api.transformer import *
 from sklearn.ensemble import VotingRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-from storage import Dataset
+from api.storage import Dataset
 
 
 def neural_network(ds: Dataset, hyper_parameters: dict = {}, train=True):

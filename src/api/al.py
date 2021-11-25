@@ -3,7 +3,7 @@ import sklearn as sk
 from scipy import spatial
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import VotingRegressor
-from storage import Dataset
+from api.storage import Dataset
 
 
 def _max_sampling_helper(values, song_ids, batchsize, n_samples):
