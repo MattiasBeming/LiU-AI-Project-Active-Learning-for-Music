@@ -5,45 +5,114 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from transformer import *
+from sklearn.ensemble import VotingRegressor
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 
 
-def k_neighbors(X, y, k):
+def k_neighbors(X, y, k, train=True):
     """
-    :param X: Feature data in numpy array with
-              shape (n_timestamps*n_songs, n_features)
-    :param y: Arousal/valence annotations belonging to the songs and timestamps
-                      in X. 2D numpy array with num_songs*time_samples rows.
-    :param k: Number of neighbors to look at
-    :return: KNeighborsRegressor fit using X, y and k
+    Creates a KNeighborsRegressor
+
+    Args:
+        X (np.array): Feature data from labeled data set, as a numpy array with
+                format (num_songs*time_samples, num_features)
+        y (np.array): Arousal/valence annotations belonging to the songs and
+                timestamps in X. 2D numpy array with
+                num_songs*time_samples rows.
+        train (bool, optional): True if model should fit to data.
+                Defaults to True.
+    Returns:
+        KNeighborsRegressor: Decision tree regressor model.
     """
-    return KNeighborsRegressor(n_neighbors=k).fit(X, y)
+    if train:
+        return KNeighborsRegressor(n_neighbors=k).fit(X, y)
+    return KNeighborsRegressor(n_neighbors=k)
 
 
-def linear_regression(X, y):
+def linear_regression(X, y, train=True):
     """
-    :param X: Feature data from labeled data set, as a numpy array with
-              format (num_songs*time_samples, num_features)
-    :param y: Arousal/valence annotations belonging to the songs and timestamps
-                      in X. 2D numpy array with num_songs*time_samples rows.
-    :return: Linear regressors for arousal and valence
+    Creates a LinearRegression regressor
+
+    Args:
+        X (np.array): Feature data from labeled data set, as a numpy array with
+                format (num_songs*time_samples, num_features)
+        y (np.array): Arousal/valence annotations belonging to the songs and
+                timestamps in X. 2D numpy array with
+                num_songs*time_samples rows.
+        train (bool, optional): True if model should fit to data.
+                Defaults to True.
+    Returns:
+        LinearRegression: Decision tree regressor model.
     """
-    return LinearRegression().fit(X, y)
+    if train:
+        return LinearRegression().fit(X, y)
+    return LinearRegression()
 
 
-def decision_tree(X, y):
+def decision_tree(X, y, train=True):
     """
     Creates a decision tree regressor
 
     Args:
         X (np.array): Feature data from labeled data set, as a numpy array with
-              format (num_songs*time_samples, num_features)
-        y (np.array): Arousal/valence annotations belonging to the songs and timestamps
-                      in X. 2D numpy array with num_songs*time_samples rows.
-
+                format (num_songs*time_samples, num_features)
+        y (np.array): Arousal/valence annotations belonging to the songs and
+                timestamps in X. 2D numpy array with
+                num_songs*time_samples rows.
+        train (bool, optional): True if model should fit to data.
+                Defaults to True.
     Returns:
-        DecisionTreeRegressor: Decision tree regressor fitted to the data.
+        DecisionTreeRegressor: Decision tree regressor model.
     """
-    return DecisionTreeRegressor().fit(X, y)
+    if train:
+        return DecisionTreeRegressor().fit(X, y)
+    return DecisionTreeRegressor()
+
+
+def gradient_tree_boosting(X, y, train=True):
+    """
+    Creates a gradient tree boosting regressor
+
+    Args:
+        X (np.array): Feature data from labeled data set, as a numpy array with
+                format (num_songs*time_samples, num_features)
+        y (np.array): Arousal/valence annotations belonging to the songs and
+                timestamps in X. 2D numpy array with
+                num_songs*time_samples rows.
+        train (bool, optional): True if model should fit to data.
+                Defaults to True.
+    Returns:
+        DecisionTreeRegressor: gradient tree boosting model.
+    """
+    if train:
+        return MultiOutputRegressor(GradientBoostingRegressor()).fit(X, y)
+    return MultiOutputRegressor(GradientBoostingRegressor())
+
+
+def ensemble(X, y, regressors, names, train=True):
+    """
+    Creates a voting ensemble  regressor
+
+    Args:
+        X (np.array): Feature data from labeled data set, as a numpy array with
+                format (num_songs*time_samples, num_features)
+        y (np.array): Arousal/valence annotations belonging to the songs and
+                timestamps in X. 2D numpy array with
+                num_songs*time_samples rows.
+        regressors (list): List of regressors from sklearn.
+        names (list): List of names for the regresssors.
+                Each regressor must have a name.
+        train (bool, optional): True if model should fit to data.
+                Defaults to True.
+    Returns:
+        VotingRegressor: VotingRegressor model.
+    """
+    assert len(regressors) == len(names)
+    est = list(zip(names, regressors))
+    if train:
+        return MultiOutputRegressor(VotingRegressor(estimators=est)).fit(X, y)
+    return MultiOutputRegressor(VotingRegressor(estimators=est))
 
 
 def correlation(path_arousal, path_valence):
