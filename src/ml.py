@@ -32,11 +32,16 @@ def linear_regression(X, y):
 
 def decision_tree(X, y):
     """
-    :param X: Feature data from labeled data set, as a numpy array with
+    Creates a decision tree regressor
+
+    Args:
+        X (np.array): Feature data from labeled data set, as a numpy array with
               format (num_songs*time_samples, num_features)
-    :param y: Arousal/valence annotations belonging to the songs and timestamps
+        y (np.array): Arousal/valence annotations belonging to the songs and timestamps
                       in X. 2D numpy array with num_songs*time_samples rows.
-    :return: Linear regressors for arousal and valence
+
+    Returns:
+        DecisionTreeRegressor: Decision tree regressor fitted to the data.
     """
     return DecisionTreeRegressor().fit(X, y)
 
