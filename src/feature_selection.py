@@ -9,8 +9,9 @@ from sklearn.feature_selection import VarianceThreshold
 
 # OBS, Run this file from src
 
+
 class Method(Enum):
-    D = 0 # Default methods - no feature selection
+    D = 0  # Default methods - no feature selection
     PCA = 1
     VT = 2
 
@@ -44,13 +45,18 @@ def split_data(data, tr_size):
     return tr, te
 
 
-def scale(tr, te):
+def scale(tr, te, before=True):
     """
-    Scale the data before performing PCA.
+    Scale the data before/after performing feature selection.
     """
     scaler = StandardScaler()
-    tr.iloc[:, 2:].values[:] = scaler.fit_transform(tr.iloc[:, 2:].values[:])
-    te.iloc[:, 2:].values[:] = scaler.transform(te.iloc[:, 2:].values[:])
+    if before:
+        tr.iloc[:, 2:].values[:] = scaler.fit_transform(
+            tr.iloc[:, 2:].values[:])
+        te.iloc[:, 2:].values[:] = scaler.transform(te.iloc[:, 2:].values[:])
+        return tr, te
+    tr = scaler.fit_transform(tr)
+    te = scaler.transform(te)
     return tr, te
 
 
@@ -62,13 +68,13 @@ def pca(tr, te, percent):
         percent (float): perform pca to describe 'percent' of the data.
     """
     pca = PCA(n_components=percent, svd_solver='full')
-    tr_pca = pca.fit_transform(tr.iloc[:, 2:].values[:])
-    te_pca = pca.transform(te.iloc[:, 2:].values[:])
+    tr = pca.fit_transform(tr.iloc[:, 2:].values[:])
+    te = pca.transform(te.iloc[:, 2:].values[:])
 
     print((f"\n{pca.n_components_} number of features "
            f"holds {percent} of the Data."))
 
-    return tr_pca, te_pca
+    return tr, te
 
 
 def variance_threshold(tr, te, threshold):
@@ -116,6 +122,7 @@ def feature_selection(filepath, tr_size=0.8, method=Method.PCA,
     if method == Method.PCA:
         print(f"Shape pre PCA: tr shape: {tr.shape}, te shape: {te.shape}")
         tr, te = pca(tr, te, pca_percent)
+        tr, te = scale(tr, te, before=False)
 
     if method == Method.VT:
         print(f"Shape pre VT: tr shape: {tr.shape}, te shape: {te.shape}")
@@ -131,7 +138,6 @@ def feature_selection(filepath, tr_size=0.8, method=Method.PCA,
 
     print((f"Shape post selection: "
            f"tr shape: {tr.shape}, te shape: {te.shape}"))
-
     file = str(filepath)[:-4]
     np.save(Path(file + f"_train_{method.name}.npy"), tr)
     np.save(Path(file + f"_test_{method.name}.npy"), te)
