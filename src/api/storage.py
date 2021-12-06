@@ -1,4 +1,6 @@
 from api.transformer import *
+import pandas as pd
+import numpy as np
 import warnings
 from tqdm import tqdm
 
@@ -9,8 +11,7 @@ _datasets = {}
 
 
 class Dataset():
-    def __init__(self, data=None, labels_arousal=None, labels_valence=None,
-                 contained_song_ids=[]):
+    def __init__(self, data=None, labels_arousal=None, labels_valence=None):
         """
         Initialize non-empty dataset.
 
@@ -22,15 +23,32 @@ class Dataset():
                 A 1D pandas dataframe.
             labels_valence (pandas.DataFrame):
                 A 1D pandas dataframe.
-            contained_song_ids (list):
-                List containing indexes of loaded songs.
         """
         self._data = data
         self._labels_arousal = labels_arousal
         self._labels_valence = labels_valence
-        self._contained_song_ids = contained_song_ids
         self._sliding_window = 0
         self._throw_data = False
+
+    def add_datapoints(self, features, arousal_labels, valence_labels):
+        """
+        Appends datapoints to this dataset. Note that if this dataset is
+        configured with a sliding window, `features` must contain values
+        for the window slots. See `get_data_shape()`.
+
+        Args:
+            features (pandas.DataFrame): 2D DataFrame with dimensions
+                [[song_id, sample], features].
+            arousal_labels (pandas.DataFrame): Single column DataFrame with
+                [[song_id, sample], arousal].
+            valence_labels (pandas.DataFrame): Single column DataFrame with
+                [[song_id, sample], valence].
+        """
+        self._data = pd.concat([self._data, features], levels=2)
+        self._labels_arousal = pd.concat(
+            [self._labels_arousal, arousal_labels])
+        self._labels_valence = pd.concat(
+            [self._labels_valence, valence_labels])
 
     def get_data(self):
         """
@@ -102,10 +120,21 @@ class Dataset():
             ValueError: If 'labels_arousal' or 'labels_valence' is None.
 
         Returns:
-            np.ndarray: A 2D numpy array with labels for arousal and valence.
+            pd.DataFrame: A 2D DataFrame with labels for arousal and valence.
         """
-        return np.column_stack(
-            (self.get_arousal_labels(), self.get_valence_labels()))
+        return pd.concat(
+            [self.get_arousal_labels(), self.get_valence_labels()],
+            axis=1
+        )
+
+    def get_contained_song_ids(self):
+        """
+        Returns the song_ids contained by this dataset.
+
+        Returns:
+            np.ndarray: 1D array with song_ids in the dataset.
+        """
+        return np.array(self._data.index.levels[0])
 
     def delete_data(self):
         """
@@ -114,7 +143,6 @@ class Dataset():
         self._data = None
         self._labels_arousal = None
         self._labels_valence = None
-        self._found_inds = []
 
     def sliding_window_train(self, sliding_window, prior=np.array([])):
         """
@@ -396,7 +424,7 @@ def load_dataset(name,
         data = remove_unlabeled_data(data)
 
     # Create and store the dataset.
-    dataset = Dataset(data, labels_arousal, labels_valence, found_song_ids)
+    dataset = Dataset(data, labels_arousal, labels_valence)
     _datasets[name] = dataset
 
 

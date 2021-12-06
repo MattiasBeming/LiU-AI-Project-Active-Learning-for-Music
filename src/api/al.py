@@ -85,7 +85,7 @@ def max_std_sampling(labeled_ds: Dataset, unlabeled_ds: Dataset,
     stds = np.std(pred, axis=(1, 2))
     return _max_sampling_helper(
         stds,
-        unlabeled_ds._contained_song_ids,  # TODO: Expose song IDs publically
+        unlabeled_ds.get_contained_song_ids(),
         batch_size, n_samples_per_song
     )
 
@@ -121,7 +121,7 @@ def output_greedy_sampling(labeled_ds: Dataset, unlabeled_ds: Dataset,
     # distance to label and return song_ids
     return _max_sampling_helper(
         min_distances,
-        unlabeled_ds._contained_song_ids,  # TODO: Expose song IDs publically
+        unlabeled_ds.get_contained_song_ids(),
         batch_size, n_samples_per_song
     )
 
@@ -157,7 +157,7 @@ def input_greedy_sampling(labeled_ds: Dataset, unlabeled_ds: Dataset,
     # distance to label features and return indices
     return _max_sampling_helper(
         min_distances,
-        unlabeled_ds._contained_song_ids,  # TODO: Expose song IDs publically
+        unlabeled_ds.get_contained_song_ids(),
         batch_size, n_samples_per_song
     )
 
@@ -203,6 +203,6 @@ def input_output_greedy_sampling(labeled_ds: Dataset, unlabeled_ds: Dataset,
     # distance and return indices
     return _max_sampling_helper(
         min_distances,
-        unlabeled_ds._contained_song_ids,  # TODO: Expose song IDs publically
+        unlabeled_ds.get_contained_song_ids(),
         batch_size, n_samples_per_song
     )
