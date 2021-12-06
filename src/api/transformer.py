@@ -186,5 +186,6 @@ def remove_high_std_songs_from(data, found_song_ids, arousal_std, valence_std):
     # Drop songs with high standard deviation not found in 'found_song_ids_new'
     data = data[data.index.get_level_values(
         'song_id').isin(found_song_ids_new)]
+    data.index = data.index.remove_unused_levels()
 
     return data, found_song_ids_new
