@@ -8,124 +8,145 @@ from transformer import *
 from sklearn.ensemble import VotingRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import GradientBoostingRegressor
+from storage import Dataset
 
 
-def k_neighbors(X, y, k, train=True):
+def k_neighbors(ds: Dataset, hyper_parameters: dict = {}, train=True):
     """
-    Creates a KNeighborsRegressor
+    Construct a KNeighborsRegressor model.
 
     Args:
-        X (np.array): Feature data from labeled data set, as a numpy array with
-                format (num_songs*time_samples, num_features)
-        y (np.array): Arousal/valence annotations belonging to the songs and
-                timestamps in X. 2D numpy array with
-                num_songs*time_samples rows.
-        train (bool, optional): True if model should fit to data.
-                Defaults to True.
+        ds (Dataset): Dataset to fit on. May be `None` if `train=False`.
+        hyper_parameters (dict): Should contain all desired hyperparameters.
+            These will be forwarded as keyword arguments to the returned
+            regressor instance. Defaults to empty dict.
+        train (bool, optional): If true, fit to ds. Defaults to True.
+
     Returns:
-        KNeighborsRegressor: Decision tree regressor model.
+        [KNeighborsRegressor]: A new KNeighborsRegressor estimator.
     """
     if train:
-        return KNeighborsRegressor(n_neighbors=k).fit(X, y)
-    return KNeighborsRegressor(n_neighbors=k)
+        return KNeighborsRegressor(**hyper_parameters).fit(
+            ds.get_data(), ds.get_labels())
+    return KNeighborsRegressor(**hyper_parameters)
 
 
-def linear_regression(X, y, train=True):
+def linear_regression(ds: Dataset, hyper_parameters: dict = {}, train=True):
     """
-    Creates a LinearRegression regressor
+    Construct a LinearRegression model.
 
     Args:
-        X (np.array): Feature data from labeled data set, as a numpy array with
-                format (num_songs*time_samples, num_features)
-        y (np.array): Arousal/valence annotations belonging to the songs and
-                timestamps in X. 2D numpy array with
-                num_songs*time_samples rows.
-        train (bool, optional): True if model should fit to data.
-                Defaults to True.
+        ds (Dataset): Dataset to fit on. May be `None` if `train=False`.
+        hyper_parameters (dict): Should contain all desired hyperparameters.
+            These will be forwarded as keyword arguments to the returned
+            regressor instance. Defaults to empty dict.
+        train (bool, optional): If true, fit to ds. Defaults to True.
+
     Returns:
-        LinearRegression: Decision tree regressor model.
+        [LinearRegression]: A new LinearRegression estimator.
     """
     if train:
-        return LinearRegression().fit(X, y)
-    return LinearRegression()
+        return LinearRegression(**hyper_parameters).fit(ds.get_data(),
+                                                        ds.get_labels())
+    return LinearRegression(**hyper_parameters)
 
 
-def decision_tree(X, y, train=True):
+def decision_tree(ds: Dataset, hyper_parameters: dict = {}, train=True):
     """
-    Creates a decision tree regressor
+    Construct a DecisionTreeRegressor model.
 
     Args:
-        X (np.array): Feature data from labeled data set, as a numpy array with
-                format (num_songs*time_samples, num_features)
-        y (np.array): Arousal/valence annotations belonging to the songs and
-                timestamps in X. 2D numpy array with
-                num_songs*time_samples rows.
-        train (bool, optional): True if model should fit to data.
-                Defaults to True.
+        ds (Dataset): Dataset to fit on. May be `None` if `train=False`.
+        hyper_parameters (dict): Should contain all desired hyperparameters.
+            These will be forwarded as keyword arguments to the returned
+            regressor instance. Defaults to empty dict.
+        train (bool, optional): If true, fit to ds. Defaults to True.
+
     Returns:
-        DecisionTreeRegressor: Decision tree regressor model.
+        [DecisionTreeRegressor]: A new DecisionTreeRegressor estimator.
     """
     if train:
-        return DecisionTreeRegressor().fit(X, y)
-    return DecisionTreeRegressor()
+        return DecisionTreeRegressor(**hyper_parameters).fit(ds.get_data(),
+                                                             ds.get_labels())
+    return DecisionTreeRegressor(**hyper_parameters)
 
 
-def gradient_tree_boosting(X, y, train=True):
+def gradient_tree_boosting(ds: Dataset, hyper_parameters: dict = {},
+                           train=True):
     """
-    Creates a gradient tree boosting regressor
+    Construct a MultiOutputRegressor(GradientBoostingRegressor) model.
 
     Args:
-        X (np.array): Feature data from labeled data set, as a numpy array with
-                format (num_songs*time_samples, num_features)
-        y (np.array): Arousal/valence annotations belonging to the songs and
-                timestamps in X. 2D numpy array with
-                num_songs*time_samples rows.
-        train (bool, optional): True if model should fit to data.
-                Defaults to True.
+        ds (Dataset): Dataset to fit on. May be `None` if `train=False`.
+        hyper_parameters (dict): Should contain all desired hyperparameters.
+            These will be forwarded as keyword arguments to the returned
+            regressor instance. Defaults to empty dict.
+        train (bool, optional): If true, fit to ds. Defaults to True.
+
     Returns:
-        DecisionTreeRegressor: gradient tree boosting model.
+        [MultiOutputRegressor(GradientBoostingRegressor)]: A new
+            MultiOutputRegressor(GradientBoostingRegressor) estimator.
     """
     if train:
-        return MultiOutputRegressor(GradientBoostingRegressor()).fit(X, y)
-    return MultiOutputRegressor(GradientBoostingRegressor())
+        return MultiOutputRegressor(
+            GradientBoostingRegressor(**hyper_parameters)
+        ).fit(ds.get_data(), ds.get_labels())
+    return MultiOutputRegressor(GradientBoostingRegressor(**hyper_parameters))
 
 
-def ensemble(X, y, regressors, names, train=True):
+def ensemble(ds: Dataset, hyper_parameters: dict = {}, train=True):
     """
-    Creates a voting ensemble  regressor
+    Construct a MultiOutputRegressor(VotingRegressor) model.
 
     Args:
-        X (np.array): Feature data from labeled data set, as a numpy array with
-                format (num_songs*time_samples, num_features)
-        y (np.array): Arousal/valence annotations belonging to the songs and
-                timestamps in X. 2D numpy array with
-                num_songs*time_samples rows.
-        regressors (list): List of regressors from sklearn.
-        names (list): List of names for the regresssors.
-                Each regressor must have a name.
-        train (bool, optional): True if model should fit to data.
-                Defaults to True.
+        ds (Dataset): Dataset to fit on. May be `None` if `train=False`.
+        hyper_parameters (dict): Should contain all desired hyperparameters.
+            These will be forwarded as keyword arguments to the returned
+            regressor instance. Defaults to empty dict.
+
+            There are two required hyper parameters: a list of regressors to
+            use named "regressors", and a list of matching regressor names
+            called "names".
+        train (bool, optional): If true, fit to ds. Defaults to True.
+
     Returns:
-        VotingRegressor: VotingRegressor model.
+        [MultiOutputRegressor(VotingRegressor)]: A new
+            MultiOutputRegressor(VotingRegressor) estimator.
     """
+    regressors = hyper_parameters["regressors"]
+    names = hyper_parameters["names"]
+
     assert len(regressors) == len(names)
+
+    # Get all remaining hyper parameters
+    remaining_hyper_parameters = {
+        hp: hyper_parameters[hp]
+        for hp in hyper_parameters
+        if hp not in ("regressors", "names")
+    }
+
     est = list(zip(names, regressors))
     if train:
-        return MultiOutputRegressor(VotingRegressor(estimators=est)).fit(X, y)
-    return MultiOutputRegressor(VotingRegressor(estimators=est))
+        return MultiOutputRegressor(VotingRegressor(
+            estimators=est,
+            **remaining_hyper_parameters
+        )).fit(ds.get_data(), ds.get_labels())
+    return MultiOutputRegressor(VotingRegressor(
+        estimators=est,
+        **remaining_hyper_parameters
+    ))
 
 
 def correlation(path_arousal, path_valence):
     """
     Calculates the covariances between the dynamic annotations
         for arousal and valence for all songs.
-    Input:
-        path_arousal: A Path object (from pathlib), containing
-            the path to "arousal_cont_average.csv".
-        path_valence: A Path object (from pathlib), containing
-            the path to "valence_cont_average.csv".
-    Output:
-        covs: A 1D numpy array containing the dynamic covariances
+    Args:
+        path_arousal (pathlib.Path): A path to "arousal_cont_average.csv".
+        path_valence (pathlib.Path): A path to "valence_cont_average.csv".
+
+    Returns:
+        [np.ndarray]: A 1D numpy array containing the dynamic covariances
             for each song. If the file paths were incorrect, this
             will be set to -1.
     """
