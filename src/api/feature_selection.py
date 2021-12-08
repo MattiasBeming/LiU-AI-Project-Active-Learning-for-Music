@@ -23,6 +23,7 @@ def split_data(data, tr_size):
     unique_songs = np.unique(np.array(data["song_id"]))
 
     nr_tr = int(np.ceil(len(unique_songs)*tr_size))
+    np.random.seed(42069)
     tr_songs = np.random.choice(unique_songs, nr_tr, replace=False)
     te_songs = np.setdiff1d(unique_songs, tr_songs, assume_unique=True)
 
