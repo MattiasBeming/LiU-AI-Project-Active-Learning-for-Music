@@ -29,6 +29,7 @@ class Dataset():
         self._labels_valence = labels_valence
         self._sliding_window = 0
         self._throw_data = False
+        self._prior = np.array([])
 
     def add_datapoints(self, features, arousal_labels, valence_labels):
         """
@@ -50,6 +51,52 @@ class Dataset():
         self._labels_valence = pd.concat(
             [self._labels_valence, valence_labels])
 
+    def add_songs(self, features, arousal_labels, valence_labels):
+        """
+        Add songs to dataset. Note that `features` should not
+        contain any sliding window columns. These columns will be
+        added by the function if the dataset is configured with a
+        sliding window.
+
+        Args:
+            features (pandas.DataFrame): 2D DataFrame with dimensions
+                [[song_id, sample], features].
+            arousal_labels (np.ndarray): 2D numpy array of arousal values for
+                            the songs in features. Should be same order
+                            with regards to samples as in
+                            the `features` parameter. Dimensions
+                            should be (song_ids*samples, 1).
+            valence_labels (np.ndarray): 2D numpy array of valence values for
+                            the songs in features. Should be same order
+                            with regards to samples and song ids as in
+                            the `features` parameter. Dimensions
+                            should be (song_ids*samples, 1).
+        """
+        # Create pandas dataframe for arousal and valence labels
+        multi_index = features.index
+        labels_arousal = pd.DataFrame(
+            data=arousal_labels, index=multi_index)
+        labels_valence = pd.DataFrame(
+            data=valence_labels, index=multi_index)
+
+        # Create temp dataset and add the data to it
+        temp_ds = Dataset(
+            data=features,
+            labels_arousal=labels_arousal,
+            labels_valence=labels_valence
+        )
+
+        # Call sliding window on temp dataset with stored params
+        temp_ds.sliding_window_train(
+            sliding_window=self._sliding_window, prior=self._prior)
+
+        # Use temp dataset to add new datapoints to self
+        self.add_datapoints(
+            features=temp_ds.get_data(),
+            arousal_labels=temp_ds.get_arousal_labels(),
+            valence_labels=temp_ds.get_valence_labels()
+        )
+
     def get_data(self):
         """
         Returns the features of the dataset.
@@ -64,8 +111,11 @@ class Dataset():
         """
         if (self._data is not None):
             if(self._throw_data):
-                return self._data.drop(labels=self._data.index.get_level_values(1)[
-                    0:self._sliding_window], axis=0, level=1)
+                return self._data.drop(
+                    labels=self._data.index.get_level_values(1)[
+                        0:self._sliding_window
+                    ], axis=0, level=1
+                )
             else:
                 return self._data
         else:
@@ -84,8 +134,11 @@ class Dataset():
         """
         if (self._labels_arousal is not None):
             if(self._throw_data):
-                return self._labels_arousal.drop(labels=self._labels_arousal.index.get_level_values(1)[
-                    0:self._sliding_window], axis=0, level=1)
+                return self._labels_arousal.drop(
+                    labels=self._labels_arousal.index.get_level_values(1)[
+                        0:self._sliding_window
+                    ], axis=0, level=1
+                )
             else:
                 return self._labels_arousal
         else:
@@ -104,8 +157,11 @@ class Dataset():
         """
         if (self._labels_valence is not None):
             if(self._throw_data):
-                return self._labels_valence.drop(labels=self._labels_valence.index.get_level_values(1)[
-                    0:self._sliding_window], axis=0, level=1)
+                return self._labels_valence.drop(
+                    labels=self._labels_valence.index.get_level_values(1)[
+                        0:self._sliding_window
+                    ], axis=0, level=1
+                )
             else:
                 return self._labels_valence
         else:
@@ -143,6 +199,9 @@ class Dataset():
         self._data = None
         self._labels_arousal = None
         self._labels_valence = None
+        self._sliding_window = None
+        self._throw_data = None
+        self._prior = None
 
     def sliding_window_train(self, sliding_window, prior=np.array([])):
         """
@@ -159,18 +218,23 @@ class Dataset():
 
         Args:
             sliding_window (int): Number of previous samples to look at.
-            prior (np.array, optional): Prior to use for first samples. Defaults to np.array([]).
+            prior (np.array, optional): Prior to use for first samples.
+                    Defaults to np.array([]).
         """
 
         # Create column labels for sliding window
         col_labels = [
-            f"sw_a{int(1 + i/2)}" if (i % 2 == 0) else f"sw_v{int(1 + (i-1)/2)}" for i in range(0, 2*sliding_window)]
+            f"sw_a{int(1 + i/2)}" if (i % 2 == 0)
+            else f"sw_v{int(1 + (i-1)/2)}"
+            for i in range(0, 2*sliding_window)
+        ]
 
         if(self._sliding_window > 0):
             # Remove previous sliding window
             self._data.drop(
                 columns=self._data.columns[-2*self._sliding_window:],
-                inplace=True)
+                inplace=True
+            )
 
         # Set new sliding window
         self._sliding_window = sliding_window
@@ -178,38 +242,46 @@ class Dataset():
         if(sliding_window > 0 and len(prior) > 0):
             # Don't throw away data
             self._throw_data = False
+
             # Create matrix with zeros to append to data and fill
-            n, m = self._data.shape
+            n, _ = self._data.shape
             zeros = pd.DataFrame(
-                np.zeros((n, 2*sliding_window)), columns=col_labels)
+                np.zeros((n, 2*sliding_window)), columns=col_labels
+            )
+
             # Append matrix to data
             self._data = pd.concat(
-                [self._data.reset_index(), zeros], axis=1)
-            self._data.set_index(['song_id', 'sample'],
-                                 inplace=True)
+                [self._data.reset_index(), zeros], axis=1
+            )
+
+            # Set index
+            self._data.set_index(
+                ['song_id', 'sample'],
+                inplace=True
+            )
 
             if(len(prior) == 1 and sliding_window > 1):
                 # Use prior duplicated 2*sliding_window times
                 prior = np.repeat(prior, 2*sliding_window)
-                # Else just use the assigned prior
 
             # Use prior
-            for song_id, song in tqdm(self._data.groupby(level=0)):
+            for _, song in tqdm(self._data.groupby(level=0)):
                 prev_sample = []
                 prev_sample_index = 0
 
-                for index, sample in song.iterrows():
+                for index, _ in song.iterrows():
                     if(len(prev_sample) == 0):
                         # Insert prior at first sample of each song
                         self._data.loc[index][col_labels] = prior
                     else:
                         # Use previous sample to shift window
-                        self._data.loc[index][col_labels[2:]
-                                              ] = list(prev_sample.iloc[-2*sliding_window:-2])
+                        self._data.loc[index][col_labels[2:]] = \
+                            list(prev_sample.iloc[-2*sliding_window:-2])
 
-                        # Use previous target to update first 2 positions in window
-                        self._data.loc[index][col_labels[0:2]
-                                              ] = list(self._labels_arousal.loc[prev_sample_index]) + list(self._labels_valence.loc[prev_sample_index])
+                        # Use previous target to update first 2 positions
+                        self._data.loc[index][col_labels[0:2]] = \
+                            list(self._labels_arousal.loc[prev_sample_index]) \
+                            + list(self._labels_valence.loc[prev_sample_index])
 
                     # Update prev_sample and prev_sample_index
                     prev_sample = self._data.loc[index]
@@ -218,48 +290,60 @@ class Dataset():
         elif sliding_window == 0:
             # Don't throw away data
             self._throw_data = False
-            return
+
         else:
             # Case where prior is empty and sliding window > 0
+
             # Throw away data
             self._throw_data = True
+
             # Create matrix with zeros to append to data and fill
-            n, m = self._data.shape
+            n, _ = self._data.shape
             zeros = pd.DataFrame(
                 np.zeros((n, 2*sliding_window)), columns=col_labels)
+
             # Append matrix to data
             self._data = pd.concat(
-                [self._data.reset_index(), zeros], axis=1)
+                [self._data.reset_index(), zeros], axis=1
+            )
+
+            # Set index
             self._data.set_index(['song_id', 'sample'], inplace=True)
 
-            for song_id, song in tqdm(self._data.groupby(level=0)):
+            for _, song in tqdm(self._data.groupby(level=0)):
                 prev_sample = []
                 prev_sample_index = 0
-                i = 0
+                sample_num = 0
                 prior = []
-                for index, sample in song.iterrows():
-                    if(i == sliding_window):
+
+                for index, _ in song.iterrows():
+                    if(sample_num == sliding_window):
                         # Insert prior at first sample of each song
                         self._data.loc[index][col_labels] = prior
                         prev_sample = self._data.loc[index]
                         prev_sample_index = index
-                    elif(i < sliding_window):
+                    elif(sample_num < sliding_window):
                         # Build prior
-                        prior = list(
-                            self._labels_arousal.loc[index]) + list(self._labels_valence.loc[index]) + prior
+                        prior = list(self._labels_arousal.loc[index]) + \
+                            list(self._labels_valence.loc[index]) + prior
                     else:
                         # Use previous sample to shift window
-                        self._data.loc[index][col_labels[2:]
-                                              ] = list(prev_sample.iloc[-2*sliding_window:-2])
+                        self._data.loc[index][col_labels[2:]] = \
+                            list(prev_sample.iloc[-2 * sliding_window:-2])
 
-                        # Use previous target to update first 2 positions in window
-                        self._data.loc[index][col_labels[0:2]
-                                              ] = list(self._labels_arousal.loc[prev_sample_index]) + list(self._labels_valence.loc[prev_sample_index])
+                        # Use previous target to update first 2 positions
+                        self._data.loc[index][col_labels[0:2]] = \
+                            list(self._labels_arousal.loc[prev_sample_index]) \
+                            + list(self._labels_valence.loc[prev_sample_index])
 
-                    i += 1
+                    sample_num += 1
+
                     # Update prev_sample and prev_sample_index
                     prev_sample = self._data.loc[index]
                     prev_sample_index = index
+
+        # Store prior
+        self._prior = prior
 
     def sliding_window_test(self, regressor, sliding_window, prior):
         """
@@ -283,13 +367,17 @@ class Dataset():
 
         # Create column labels for sliding window
         col_labels = [
-            f"sw_a{int(1 + i/2)}" if (i % 2 == 0) else f"sw_v{int(1 + (i-1)/2)}" for i in range(0, 2*sliding_window)]
+            f"sw_a{int(1 + i/2)}" if (i % 2 == 0)
+            else f"sw_v{int(1 + (i-1)/2)}"
+            for i in range(0, 2*sliding_window)
+        ]
 
         if(self._sliding_window > 0):
             # Remove previous sliding window
             self._data.drop(
                 columns=self._data.columns[-2*self._sliding_window:],
-                inplace=True)
+                inplace=True
+            )
 
         if sliding_window == 0:
             # Don't throw away data
@@ -300,69 +388,74 @@ class Dataset():
         self._sliding_window = sliding_window
 
         # Create matrix with zeros to append to data and fill
-        n, m = self._data.shape
+        n, _ = self._data.shape
         zeros = pd.DataFrame(
-            np.zeros((n, 2*sliding_window)), columns=col_labels)
+            np.zeros((n, 2*sliding_window)), columns=col_labels
+        )
+
         # Append matrix to data
         self._data = pd.concat(
-            [self._data.reset_index(), zeros], axis=1)
+            [self._data.reset_index(), zeros], axis=1
+        )
+
+        # Set index
         self._data.set_index(['song_id', 'sample'], inplace=True)
 
         if prior.ndim == 1:
             # Don't throw away data
             self._throw_data = False
+
             if(len(prior) == 1 and sliding_window > 1):
                 # Use prior duplicated 2*sliding_window times
                 prior = np.repeat(prior, 2*sliding_window)
 
             # Use prior
-            for song_id, song in tqdm(self._data.groupby(level=0)):
+            for _, song in tqdm(self._data.groupby(level=0)):
                 prev_sample = []
-                prev_sample_index = 0
 
-                for index, sample in song.iterrows():
+                for index, _ in song.iterrows():
                     if(len(prev_sample) == 0):
                         # Insert prior at first sample of each song
                         self._data.loc[index][col_labels] = prior
                     else:
                         # Use previous sample to shift window
-                        self._data.loc[index][col_labels[2:]
-                                              ] = list(prev_sample.iloc[-2*sliding_window:-2])
+                        self._data.loc[index][col_labels[2:]] = \
+                            list(prev_sample.iloc[-2*sliding_window:-2])
 
-                        # Use regressor to predict and update first 2 positions in window
-                        self._data.loc[index][col_labels[0:2]
-                                              ] = regressor.predict([prev_sample])[0]
+                        # Use regressor to predict and update first 2 positions
+                        self._data.loc[index][col_labels[0:2]] = \
+                            regressor.predict([prev_sample])[0]
 
-                    # Update prev_sample and prev_sample_index
+                    # Update prev_sample
                     prev_sample = self._data.loc[index]
-                    prev_sample_index = index
         else:
             # Throw away data
             self._throw_data = True
+
             # Use different prior for each song
             song_num = 0
-            for song_id, song in tqdm(self._data.groupby(level=0)):
+
+            for _, song in tqdm(self._data.groupby(level=0)):
                 prev_sample = []
-                prev_sample_index = 0
                 song_prior = prior[song_num]
                 sample_num = 0
-                for index, sample in song.iterrows():
+
+                for index, _ in song.iterrows():
                     if(sample_num >= sliding_window):
                         if(sample_num == sliding_window):
                             # Insert prior
                             self._data.loc[index][col_labels] = song_prior
                         else:
                             # Use previous sample to shift window
-                            self._data.loc[index][col_labels[2:]
-                                                  ] = list(prev_sample.iloc[-2*sliding_window:-2])
+                            self._data.loc[index][col_labels[2:]] = \
+                                list(prev_sample.iloc[-2 * sliding_window:-2])
 
-                            # Use regressor to predict and update first 2 positions in window
-                            self._data.loc[index][col_labels[0:2]
-                                                  ] = regressor.predict([prev_sample])[0]
+                            # Use regressor to predict and update first 2 pos
+                            self._data.loc[index][col_labels[0:2]] = \
+                                regressor.predict([prev_sample])[0]
 
-                    # Update prev_sample and prev_sample_index
+                    # Update prev_sample and sample number
                     prev_sample = self._data.loc[index]
-                    prev_sample_index = index
                     sample_num += 1
                 song_num += 1
 
