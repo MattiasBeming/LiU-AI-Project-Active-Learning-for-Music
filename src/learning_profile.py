@@ -162,7 +162,7 @@ class LearningProfile:
             np.ndarray: MSE values for valence, or `None` if the values
                 have not yet been set through `set_MSE()`.
         """
-        return self._MSE_arousal
+        return self._MSE_valence
 
     def __str__(self):
         return (
