@@ -9,7 +9,8 @@ from tqdm import tqdm
 import numpy as np
 
 
-def viability_phase(learning_profiles: list, num_iterations: int = -1):
+def viability_phase(learning_profiles: list, num_iterations: int = 1,
+                    seed_percent: float = 0.1):
     """
     Performs active learning for all Learning Profiles. However, instead of
     querying the user, pre-labeled data will be used for selected samples.
@@ -18,12 +19,13 @@ def viability_phase(learning_profiles: list, num_iterations: int = -1):
         learning_profiles (list): A list of all Learning Profiles to train.
         num_iterations (int): Number of evaluation iterations. Set to -1 if
             all training songs should be depleted. Default is -1.
+        seed_percent (float): Percent of data to be used as seed. Default is 0.1.
     """
 
     # Perform viability test for all learning profiles
     for lp in learning_profiles:
         print(f"Evaluating {lp}")
-        MSE_arousal, MSE_valence = _evaluate(lp, num_iterations)
+        MSE_arousal, MSE_valence = _evaluate(lp, num_iterations, seed_percent)
         lp.set_MSE(MSE_arousal, MSE_valence)
 
         print(f"Done!")
@@ -31,7 +33,14 @@ def viability_phase(learning_profiles: list, num_iterations: int = -1):
         print(f"Valence MSE per iteration: {lp.get_MSE_valence()}")
 
 
-def _evaluate(lp: LearningProfile, num_iterations: int):
+def _seed_song_ids(full_train_ds, seed_percent):
+    unique_song_ids = np.unique(full_train_ds.get_contained_song_ids())
+    nr_tr = int(np.ceil(len(unique_song_ids)*seed_percent))
+    np.random.seed(42069)
+    return list(np.random.choice(unique_song_ids, nr_tr, replace=False))
+
+
+def _evaluate(lp: LearningProfile, num_iterations: int, seed_percent: float):
     """
     Performs the following steps for the given learning profile:
         1: Add first song from training dataset to a seed dataset.
@@ -47,7 +56,7 @@ def _evaluate(lp: LearningProfile, num_iterations: int):
         lp (LearningProfile): Learning profile to evaluate.
         num_iterations (int): Number of evaluation iterations. Set to -1 if
             all training songs should be depleted.
-
+        seed_percent (float): Percent of data to be used as seed. Default is 0.1.
     Returns:
         (np.ndarray, np.ndarray): Arrays with arousal and valence MSE values.
     """
@@ -72,7 +81,10 @@ def _evaluate(lp: LearningProfile, num_iterations: int):
     ##########
 
     # Initialize training songs with first song id
-    seed_song_ids = [full_train_ds.get_data().iloc[0].index.values[0]]
+    # Seed, percent
+    seed_song_ids = _seed_song_ids(full_train_ds, seed_percent)
+    print(
+        f"Running with {len(seed_song_ids)} ({seed_percent*100}%) seed songs.")
 
     # Mark all but the first song as unlabeled
     unlabeled_train_song_ids = list(
@@ -84,7 +96,7 @@ def _evaluate(lp: LearningProfile, num_iterations: int):
     full_train_va = full_train_ds.get_valence_labels()
 
     # Derive number of samples per song (assume same for all songs)
-    n_samples_per_song = full_train_dat.loc[seed_song_ids, :].shape[0]
+    n_samples_per_song = full_train_dat.loc[seed_song_ids[0], :].shape[0]
 
     # Get current unlabeled features
     unlabeled_features = full_train_dat.loc[unlabeled_train_song_ids, :]
@@ -161,3 +173,92 @@ def _evaluate(lp: LearningProfile, num_iterations: int):
         MSE_valence_arr.append(MSE_valence)
 
     return MSE_arousal_arr, MSE_valence_arr
+
+# Mock init
+
+
+BATCH_SIZE = 100
+SAMPLES_PER_SONG = 61
+
+
+def init():
+
+    al_funcs = (al.input_greedy_sampling, al.output_greedy_sampling)
+
+    # TODO: Regression trees
+    ml_funcs = (ml.gradient_tree_boosting, ml.decision_tree)
+
+    # Load Dataset 1
+    storage.load_dataset(
+        "ds1_train",
+        Path("res/data/features_librosa_train_PCA.npy"),
+        Path("res/data/arousal_cont_average.csv"),
+        Path("res/data/valence_cont_average.csv"),
+        Path("res/data/arousal_cont_std.csv"),
+        Path("res/data/valence_cont_std.csv")
+    )
+
+    storage.load_dataset(
+        "ds1_test",
+        Path("res/data/features_librosa_test_PCA.npy"),
+        Path("res/data/arousal_cont_average.csv"),
+        Path("res/data/valence_cont_average.csv"),
+        Path("res/data/arousal_cont_std.csv"),
+        Path("res/data/valence_cont_std.csv")
+    )
+
+    # Load Dataset 2
+    storage.load_dataset(
+        "ds2_train",
+        Path("res/data/features_librosa_train_VT.npy"),
+        Path("res/data/arousal_cont_average.csv"),
+        Path("res/data/valence_cont_average.csv"),
+        Path("res/data/arousal_cont_std.csv"),
+        Path("res/data/valence_cont_std.csv")
+    )
+
+    storage.load_dataset(
+        "ds2_test",
+        Path("res/data/features_librosa_test_VT.npy"),
+        Path("res/data/arousal_cont_average.csv"),
+        Path("res/data/valence_cont_average.csv"),
+        Path("res/data/arousal_cont_std.csv"),
+        Path("res/data/valence_cont_std.csv")
+    )
+
+    """
+    # Load Dataset 3
+    storage.load_dataset(
+        "ds3_train",
+        Path("res/data/features_librosa_train_D.npy"),
+        Path("res/data/arousal_cont_average.csv"),
+        Path("res/data/valence_cont_average.csv"),
+        Path("res/data/arousal_cont_std.csv"),
+        Path("res/data/valence_cont_std.csv")
+    )
+
+    storage.load_dataset(
+        "ds3_test",
+        Path("res/data/features_librosa_test_D.npy"),
+        Path("res/data/arousal_cont_average.csv"),
+        Path("res/data/valence_cont_average.csv"),
+        Path("res/data/arousal_cont_std.csv"),
+        Path("res/data/valence_cont_std.csv")
+    )
+    """
+
+    datasets = ("ds1", "ds2")
+
+    return [LearningProfile(f"{ds}_train", f"{ds}_test", al_func,
+                            ml_func, BATCH_SIZE)
+            for ds in datasets
+            for al_func in al_funcs
+            for ml_func in ml_funcs]
+
+
+##########
+
+
+learning_profiles = init()
+
+viability_phase(learning_profiles)
