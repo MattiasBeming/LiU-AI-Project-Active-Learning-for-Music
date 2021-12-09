@@ -142,7 +142,7 @@ def process_result_dynamic(result):
     end = end_point - (end_point % p)
 
     # Generate sample space from period
-    x = np.linspace(0, end, int(end / p))
+    x = np.linspace(0, end, int(end / p) + 1)
 
     # Produce sampled output
     return np.hstack((
