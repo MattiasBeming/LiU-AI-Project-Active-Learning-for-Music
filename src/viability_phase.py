@@ -1,9 +1,5 @@
 from api.storage import Dataset
 from learning_profile import LearningProfile
-from pathlib import Path
-from api import storage
-from api import ml
-from api import al
 from sklearn.metrics import mean_squared_error
 from tqdm import tqdm
 import numpy as np
@@ -14,6 +10,8 @@ def viability_phase(learning_profiles: list, num_iterations: int = -1,
     """
     Performs active learning for all Learning Profiles. However, instead of
     querying the user, pre-labeled data will be used for selected samples.
+
+    Yields a learning profile for each iteration.
 
     Args:
         learning_profiles (list): A list of all Learning Profiles to train.
@@ -32,6 +30,8 @@ def viability_phase(learning_profiles: list, num_iterations: int = -1,
         print(f"Done!")
         print(f"Arousal MSE per iteration: {lp.get_MSE_arousal()}")
         print(f"Valence MSE per iteration: {lp.get_MSE_valence()}")
+
+        yield lp
 
 
 def _seed_song_ids(full_train_ds, seed_percent):
