@@ -9,7 +9,7 @@ from tqdm import tqdm
 import numpy as np
 
 
-def viability_phase(learning_profiles: list, num_iterations: int = 1,
+def viability_phase(learning_profiles: list, num_iterations: int = -1,
                     seed_percent: float = 0.1):
     """
     Performs active learning for all Learning Profiles. However, instead of
@@ -19,7 +19,8 @@ def viability_phase(learning_profiles: list, num_iterations: int = 1,
         learning_profiles (list): A list of all Learning Profiles to train.
         num_iterations (int): Number of evaluation iterations. Set to -1 if
             all training songs should be depleted. Default is -1.
-        seed_percent (float): Percent of data to be used as seed. Default is 0.1.
+        seed_percent (float): Percent of data to be used as seed. 
+            Default is 0.1.
     """
 
     # Perform viability test for all learning profiles
@@ -56,7 +57,8 @@ def _evaluate(lp: LearningProfile, num_iterations: int, seed_percent: float):
         lp (LearningProfile): Learning profile to evaluate.
         num_iterations (int): Number of evaluation iterations. Set to -1 if
             all training songs should be depleted.
-        seed_percent (float): Percent of data to be used as seed. Default is 0.1.
+        seed_percent (float): Percent of data to be used as seed. 
+            Default is 0.1.
     Returns:
         (np.ndarray, np.ndarray): Arrays with arousal and valence MSE values.
     """
@@ -173,92 +175,3 @@ def _evaluate(lp: LearningProfile, num_iterations: int, seed_percent: float):
         MSE_valence_arr.append(MSE_valence)
 
     return MSE_arousal_arr, MSE_valence_arr
-
-# Mock init
-
-
-BATCH_SIZE = 100
-SAMPLES_PER_SONG = 61
-
-
-def init():
-
-    al_funcs = (al.input_greedy_sampling, al.output_greedy_sampling)
-
-    # TODO: Regression trees
-    ml_funcs = (ml.gradient_tree_boosting, ml.decision_tree)
-
-    # Load Dataset 1
-    storage.load_dataset(
-        "ds1_train",
-        Path("res/data/features_librosa_train_PCA.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
-    )
-
-    storage.load_dataset(
-        "ds1_test",
-        Path("res/data/features_librosa_test_PCA.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
-    )
-
-    # Load Dataset 2
-    storage.load_dataset(
-        "ds2_train",
-        Path("res/data/features_librosa_train_VT.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
-    )
-
-    storage.load_dataset(
-        "ds2_test",
-        Path("res/data/features_librosa_test_VT.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
-    )
-
-    """
-    # Load Dataset 3
-    storage.load_dataset(
-        "ds3_train",
-        Path("res/data/features_librosa_train_D.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
-    )
-
-    storage.load_dataset(
-        "ds3_test",
-        Path("res/data/features_librosa_test_D.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
-    )
-    """
-
-    datasets = ("ds1", "ds2")
-
-    return [LearningProfile(f"{ds}_train", f"{ds}_test", al_func,
-                            ml_func, BATCH_SIZE)
-            for ds in datasets
-            for al_func in al_funcs
-            for ml_func in ml_funcs]
-
-
-##########
-
-
-learning_profiles = init()
-
-viability_phase(learning_profiles)
