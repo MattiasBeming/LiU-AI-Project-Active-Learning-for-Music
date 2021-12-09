@@ -190,3 +190,16 @@ class lpParser:
 
     def get_hyper_parameters(self):
         return self._hyper_parameters
+
+
+###############################################################################
+# Presentation Phase
+###############################################################################
+
+class Pres(Enum):
+    """
+    Enum for Presentation mode.
+    """
+    AL = 0
+    ML = 1
+    DS = 2  # dataset
