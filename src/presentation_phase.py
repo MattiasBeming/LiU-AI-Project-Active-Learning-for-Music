@@ -25,8 +25,10 @@ def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
     sorted_LPs = sorted(
         learning_profiles, key=lambda lp: lp.get_score(), reverse=True)
 
+    # Select 'nr_models' models with the highest score
     min_ = min(len(sorted_LPs), nr_models)
-    sorted_LPs = sorted_LPs[:min_] if nr_models != -1 else sorted_LPs
+    if nr_models > -1:
+        sorted_LPs = sorted_LPs[-min_:]
 
     # Plot all learning profiles
     # Max comparable models before colors run out = 40
@@ -53,7 +55,7 @@ def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
 
 def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
     """
-    Yield a list of learning profiles for every attribute for 
+    Yield a list of learning profiles for every attribute for
     Presentation mode.
 
     Args:
