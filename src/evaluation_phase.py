@@ -117,9 +117,9 @@ def evaluate_all_profiles(learning_profiles=[],
 
     best_LPs = [(f"Best profile: {lp.get_name(True, True)}", lp.get_score())
                 for lp in sorted_list]
-    min_ = min(len(sorted_list), nr_models)
 
-    return best_LPs[:min_] if nr_models != -1 else best_LPs
+    min_ = min(len(sorted_list), nr_models)
+    return best_LPs[:min_] if nr_models > -1 else best_LPs
 
 
 def load_all_learning_profiles(dir_path):
