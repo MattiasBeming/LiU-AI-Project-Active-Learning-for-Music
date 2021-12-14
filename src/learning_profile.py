@@ -6,7 +6,7 @@ import hashlib
 class LearningProfile:
 
     def __init__(self, train_dataset_name: str, test_dataset_name: str,
-                 al_func, ml_func, batch_size: int = 5):
+                 al_func, ml_func, hyper_parameters={}, batch_size: int = 5):
         """
         Creates a Learning Profile. A Learning Profile is used for bundling
         train/test datasets with an Active Learning function and a Machine
@@ -23,6 +23,9 @@ class LearningProfile:
                 those found in `api/al.py`.
             ml_func (function): A Machine Learning function to use, such as
                 those found in `api/ml.py`.
+            hyper_parameters (dict): A dictionary of hyper parameters to use.
+                Default is an empty dictionary, meaning standard
+                hyper parameters will be used for the ml model.
             batch_size (int): The batch size to use when performing active
                 learning. Default is 5.
         """
@@ -31,7 +34,7 @@ class LearningProfile:
         self._al_func = al_func
         self._ml_func = ml_func
         self._batch_size = batch_size
-        self._hyper_parameters = {}
+        self._hyper_parameters = hyper_parameters
         self._MSE_arousal = None
         self._MSE_valence = None
 
@@ -170,5 +173,6 @@ class LearningProfile:
             f"train='{self._train_dataset_name}', "
             f"test='{self._test_dataset_name}', "
             f"al_func={self._al_func.__name__}, "
-            f"ml_func={self._ml_func.__name__})"
+            f"ml_func={self._ml_func.__name__}), "
+            f"h_pars={self._hyper_parameters})"
         )
