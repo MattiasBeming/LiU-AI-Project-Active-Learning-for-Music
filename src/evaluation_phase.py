@@ -115,8 +115,9 @@ def evaluate_all_profiles(learning_profiles=[],
     # Sort according to best score
     sorted_list = sorted(learning_profiles, key=lambda lp: lp.get_score())
 
-    best_LPs = [(f"Best profile: {lp.get_name(True, True)}", lp.get_score())
-                for lp in sorted_list]
+    best_LPs = [(f"Best profile: {lp.get_name(True, True)} " +
+                 f" h_pars: {lp.get_hyper_parameters()}",
+                 lp.get_score()) for lp in sorted_list]
 
     min_ = min(len(sorted_list), nr_models)
     return best_LPs[:min_] if nr_models > -1 else best_LPs
