@@ -67,7 +67,7 @@ def init_phase():
 
     load_dataset(
         "ds1_test",
-        Path("res/data/features_librosa_test_PCA.npy"),
+        Path("res/data/features_librosa_val_PCA.npy"),
         Path("res/data/arousal_cont_average.csv"),
         Path("res/data/valence_cont_average.csv"),
         Path("res/data/arousal_cont_std.csv"),
@@ -86,7 +86,7 @@ def init_phase():
 
     load_dataset(
         "ds2_test",
-        Path("res/data/features_librosa_test_VT.npy"),
+        Path("res/data/features_librosa_val_VT.npy"),
         Path("res/data/arousal_cont_average.csv"),
         Path("res/data/valence_cont_average.csv"),
         Path("res/data/arousal_cont_std.csv"),
@@ -105,7 +105,7 @@ def init_phase():
 
     load_dataset(
         "ds3_test",
-        Path("res/data/features_librosa_test_D.npy"),
+        Path("res/data/features_librosa_val_D.npy"),
         Path("res/data/arousal_cont_average.csv"),
         Path("res/data/valence_cont_average.csv"),
         Path("res/data/arousal_cont_std.csv"),
@@ -125,5 +125,5 @@ def init_phase():
            for ds in datasets
            for al_func in al_funcs
            for (ml_func, hpars) in ml_funcs]
-
+    
     return lps

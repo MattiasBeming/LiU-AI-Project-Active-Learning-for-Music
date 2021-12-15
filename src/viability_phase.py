@@ -49,7 +49,7 @@ def _evaluate(lp: LearningProfile, num_iterations: int, seed_percent: float):
         3: Perform AL to find novel songs in training dataset to
             add to the seed dataset.
         4: Add these songs to the seed dataset.
-        5: Fit ML model to the seed dataset and predict on test dataset
+        5: Fit ML model to the seed dataset and predict on validation dataset
             to get MSE values for current iteration.
         6: Repeat 3-5 for a specified number of iterations: `num_iterations`.
 
@@ -73,7 +73,7 @@ def _evaluate(lp: LearningProfile, num_iterations: int, seed_percent: float):
 
     # Get full datasets
     full_train_ds = lp.get_train_dataset()
-    full_test_ds = lp.get_test_dataset()
+    full_validation_ds = lp.get_test_dataset()
 
     # Get song ids of full training data
     full_train_song_ids = full_train_ds.get_contained_song_ids()
@@ -160,14 +160,14 @@ def _evaluate(lp: LearningProfile, num_iterations: int, seed_percent: float):
             set(full_train_song_ids).difference(seed_song_ids))
         unlabeled_features = full_train_dat.loc[unlabeled_train_song_ids, :]
 
-        # Get test dataset labels
-        test_labels = full_test_ds.get_labels()
+        # Get validation_labels dataset labels
+        validation_labels = full_validation_ds.get_labels()
 
         # Perform ML
         model = ml_func(seed_ds, lp.get_hyper_parameters(), train=True)
-        y_pred = model.predict(full_test_ds.get_data())
-        MSE_arousal = mean_squared_error(test_labels.iloc[:, 0], y_pred[:, 0])
-        MSE_valence = mean_squared_error(test_labels.iloc[:, 1], y_pred[:, 1])
+        y_pred = model.predict(full_validation_ds.get_data())
+        MSE_arousal = mean_squared_error(validation_labels.iloc[:, 0], y_pred[:, 0])
+        MSE_valence = mean_squared_error(validation_labels.iloc[:, 1], y_pred[:, 1])
         pred_unlabeled = model.predict(unlabeled_features)
 
         # Save result
