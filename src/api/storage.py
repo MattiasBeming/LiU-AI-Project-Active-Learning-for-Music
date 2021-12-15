@@ -122,6 +122,18 @@ class Dataset():
             raise ValueError("Data was fetched before it was loaded. " +
                              "Do load_dataset() before calling get_dataset().")
 
+    def get_first_n_samples_of_each_song(self, n):
+        """
+        Slices data to keep only the first n samples of each song.
+        Keeps the samples from 0 to n-1.
+
+        Args:
+            n (int): Number of samples to keep.
+        """
+        temp = slice(NO_OF_INITIAL_UNUSED_SAMPLES,
+                     NO_OF_INITIAL_UNUSED_SAMPLES+n-1)
+        return(self._data.loc[(slice(None), temp), :])
+
     def get_arousal_labels(self):
         """
         Returns the labels for arousal for this dataset.

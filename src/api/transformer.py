@@ -112,6 +112,33 @@ def remove_unlabeled_data(data):
     return data.drop(labels=foo, axis=0, level=1)
 
 
+def format_pred_to_prior(pred, window_len):
+    """
+    Formats output from sklearn regressors to format
+    used when defining priors.
+    For example: preds_basic_reg = [[s1a1, s1v1, s1a2, s1v2],
+        [s2a1, s2v1, s2a2, s2v2]]
+    Args:
+        pred (np.ndarray): Multioutput predictions
+        window_len (int): sliding window size
+
+    Returns:
+        np.ndarray: Predictions in prior format.
+    """
+    res = []
+    pred_temp = []
+    count = 0
+    for row in pred:
+        if count >= window_len:
+            res.append(pred_temp)
+            pred_temp = []
+            count = 0
+        pred_temp.extend(list(row))
+        count += 1
+    res.append(pred_temp)
+    return np.array(res)
+
+
 def csv_to_npy(csv_path, npy_path):
     """
     Converts the features-file from .CSV to .NPY.
