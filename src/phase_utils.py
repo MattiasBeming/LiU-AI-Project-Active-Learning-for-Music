@@ -221,6 +221,9 @@ def get_specific_learning_profiles(learning_profiles=[],
             (using LearningProfileDescription).
         pres (PresentationMode): presentation mode.
             Defaults to PresentationMode.AL.
+
+    Yields:
+        list(LearningProfileDescription): The list of learning profiles.
     """
     if not learning_profiles:
         raise ValueError("No learning profiles given")
@@ -250,8 +253,8 @@ def sort_by_score(learning_profiles=[],
             Defaults to -1 (All models included).
 
     Returns:
-        learning_profiles(list): List of learning profiles containing the first
-        'nr_models' with the best profiles in decending order (based on score).
+        list: List of learning profiles containing the first 'nr_models'
+            with the best profiles in decending order (based on score).
     """
     if not learning_profiles:
         raise ValueError("No learning profiles given")
@@ -269,7 +272,8 @@ def sort_by_score(learning_profiles=[],
 def retrieve_best_learning_profiles(learning_profiles=[], nr_models=-1):
     """
     Retrieve the 'nr_models' best learning profiles for all presentation modes.
-    Results are presented in a dictionary on the following format:
+    Results are presented in a dictionary on the following format::
+
         {
             AL: {
                 'input_greedy_sampling': [lp1, lp2, lp3],
@@ -290,8 +294,8 @@ def retrieve_best_learning_profiles(learning_profiles=[], nr_models=-1):
             Defaults to -1 (All models included).
 
     Returns:
-        best_learning_profiles (dict): Dictionary containing the best learning
-        profiles for each presentation mode.
+        dict: Dictionary containing the best learning profiles for each
+            presentation mode.
     """
     best_profiles = {}
 
