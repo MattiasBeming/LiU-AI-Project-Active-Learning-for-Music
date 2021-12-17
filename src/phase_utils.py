@@ -23,7 +23,7 @@ class Pres(Enum):
     DS = 2  # dataset
 
 
-class lpParser:
+class LearningProfileDescription:
     """
     Used when reading data from an .npy file to create a learning profile
     with getter functions for different parameters.
@@ -33,7 +33,7 @@ class lpParser:
 
     def __init__(self, id, profile, eval=None, pres=None):
         """
-        Init function for lpParser.
+        Init function for LearningProfileDescription.
 
         Args:
             id (String): id for the learning profile.
@@ -211,9 +211,13 @@ def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
     Presentation mode.
 
     Args:
-        learning_profiles (list): List of learning profiles (using lpParser).
+        learning_profiles (list): List of learning profiles 
+            (using LearningProfileDescription).
         pres (Enum): presentation mode. Defaults to Pres.AL.
     """
+    if not learning_profiles:
+        raise ValueError("No learning profiles given")
+
     # Set pres mode for all learning profiles
     [lp.set_pres_mode(pres) for lp in learning_profiles]
 
