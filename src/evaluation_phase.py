@@ -2,14 +2,14 @@ import numpy as np
 from pathlib import Path
 from os import listdir
 from datetime import datetime
-from phase_utils import Eval, lpParser
+from phase_utils import Eval, LearningProfileDescription
 
 LP_FILE_NAME = 'lp'
 
 
 ###############################################################################
 # Store data to disk - Phase
-# Uses the class LearningProfile and not lpParser
+# Uses the class LearningProfile and not LearningProfileDescription
 ###############################################################################
 
 def create_datetime_subdir(dir_path):
@@ -87,7 +87,7 @@ def create_data(lp):
 
 ###############################################################################
 # Load data from disk - Phase
-# Uses the class lpParser and not LearningProfile
+# Uses the class LearningProfileDescription and not LearningProfile
 ###############################################################################
 
 
@@ -99,7 +99,8 @@ def evaluate_all_profiles(learning_profiles=[],
     'nr_models' profiles with the best score according to the eval method.
 
     Args:
-        learning_profiles (list): List of learning profiles (using lpParser).
+        learning_profiles (list): List of learning profiles
+            (using LearningProfileDescription).
         eval (Enum): method of evaluation. Defaults to Eval.AROUSAL.
         nr_models (int): number of models to include in plot.
             Defaults to -1 (All models included).
@@ -109,6 +110,9 @@ def evaluate_all_profiles(learning_profiles=[],
         first nr_models with the best profiles in
         decending order (based on score) and their corresponding score.
     """
+    if not learning_profiles:
+        raise ValueError("No learning profiles given")
+
     # Set eval mode for all learning profiles
     [lp.set_eval_mode(eval) for lp in learning_profiles]
 
@@ -125,7 +129,8 @@ def evaluate_all_profiles(learning_profiles=[],
 
 def load_all_learning_profiles(dir_path):
     """
-    Load all learning profiles from disk and parse them using lpParser.
+    Load all learning profiles from disk and parse them
+    using LearningProfileDescription.
 
     Args:
         dir_path (Path): Path to directory containing learning profiles.
@@ -141,6 +146,6 @@ def load_all_learning_profiles(dir_path):
             # Get id from the file name
             id = file_name.split(LP_FILE_NAME + '-', 1)[1]
             id = id.split('.npy')[0]
-            lp = lpParser(id, lp_loaded)
+            lp = LearningProfileDescription(id, lp_loaded)
             learning_profiles.append(lp)
     return learning_profiles

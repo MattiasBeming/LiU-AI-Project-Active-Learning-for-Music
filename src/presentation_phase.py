@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from phase_utils import Eval
+from phase_utils import Eval, LearningProfileDescription
 
 
 def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
@@ -8,7 +8,8 @@ def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
     for the given evaluation mode.
 
     Args:
-        learning_profiles (list): List of learning profiles (using lpParser).
+        learning_profiles (list): List of learning profiles
+            (using LearningProfileDescription).
         eval (Enum): method of evaluation. Defaults to Eval.AROUSAL.
         nr_models (int): number of models to include in plot.
             Defaults to -1 (All models included).
