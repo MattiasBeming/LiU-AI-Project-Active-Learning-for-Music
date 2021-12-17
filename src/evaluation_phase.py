@@ -140,6 +140,7 @@ def load_all_learning_profiles(dir_path):
             lp_loaded = np.load(Path(dir_path / file_name), allow_pickle=True)
             # Get id from the file name
             id = file_name.split(LP_FILE_NAME + '-', 1)[1]
+            id = id.split('.npy')[0]
             lp = lpParser(id, lp_loaded)
             learning_profiles.append(lp)
     return learning_profiles
