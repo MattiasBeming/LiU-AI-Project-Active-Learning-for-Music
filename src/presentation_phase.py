@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from phase_utils import Eval, Pres
+from phase_utils import Eval
 
 
 def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
@@ -51,21 +51,3 @@ def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
     plt.ylabel("MSE")
     plt.xlabel(f"Batch")
     plt.show()
-
-
-def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
-    """
-    Yield a list of learning profiles for every attribute for
-    Presentation mode.
-
-    Args:
-        learning_profiles (list): List of learning profiles (using lpParser).
-        pres (Enum): presentation mode. Defaults to Pres.AL.
-    """
-    # Set pres mode for all learning profiles
-    [lp.set_pres_mode(pres) for lp in learning_profiles]
-
-    # Loop through all attributes and yield the models with the same attribute
-    for attr in set([lp.get_attr() for lp in learning_profiles]):
-        # Retrieve all learning profiles with the same attribute
-        yield [lp for lp in learning_profiles if lp.get_attr() == attr]
