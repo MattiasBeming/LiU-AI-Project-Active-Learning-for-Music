@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from phase_utils import Eval, LearningProfileDescription
+from phase_utils import Eval, LearningProfileDescription, sort_by_score
 
 
 def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
@@ -17,20 +17,9 @@ def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
     if not learning_profiles:
         raise ValueError("No learning profiles given")
 
+    sorted_LPs = sort_by_score(learning_profiles, eval, nr_models)
+
     plt.style.use('ggplot')
-
-    # Set eval mode for all learning profiles
-    [lp.set_eval_mode(eval) for lp in learning_profiles]
-
-    # Sort according to best score (acending)
-    sorted_LPs = sorted(
-        learning_profiles, key=lambda lp: lp.get_score(), reverse=True)
-
-    # Select 'nr_models' models with the highest score
-    min_ = min(len(sorted_LPs), nr_models)
-    if nr_models > -1:
-        sorted_LPs = sorted_LPs[-min_:]
-
     # Plot all learning profiles
     # Max comparable models before colors run out = 40
     COLORS = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple',

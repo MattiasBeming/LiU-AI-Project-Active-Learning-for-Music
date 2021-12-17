@@ -200,18 +200,22 @@ class LearningProfileDescription:
     def get_hyper_parameters(self):
         return self._hyper_parameters
 
+    def __str__(self):
+        return f"lp-{self._id}"
+
 
 ###############################################################################
 # Help-functions
 ###############################################################################
 
+
 def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
     """
-    Yield a list of learning profiles for every attribute for
+    Yield a list of learning profiles for every attribute for the given
     Presentation mode.
 
     Args:
-        learning_profiles (list): List of learning profiles 
+        learning_profiles (list): List of learning profiles
             (using LearningProfileDescription).
         pres (Enum): presentation mode. Defaults to Pres.AL.
     """
@@ -225,6 +229,84 @@ def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
     for attr in set([lp.get_attr() for lp in learning_profiles]):
         # Retrieve all learning profiles with the same attribute
         yield [lp for lp in learning_profiles if lp.get_attr() == attr]
+
+
+def sort_by_score(learning_profiles=[], eval=Eval.MEAN, nr_models=-1):
+    """
+    Given a list of learning profiles, sort them by score according to
+    the eval method and return the first 'nr_models' profiles.
+
+    Args:
+        learning_profiles (list): List of learning profiles
+            (using LearningProfileDescription).
+        eval (Enum): method of evaluation. Defaults to Eval.MEAN.
+        nr_models (int): number of models to include in plot.
+            Defaults to -1 (All models included).
+
+    Returns:
+        learning_profiles(list): List of learning profiles containing the first
+        'nr_models' with the best profiles in decending order (based on score).
+    """
+    if not learning_profiles:
+        raise ValueError("No learning profiles given")
+
+    # Set eval mode for all learning profiles
+    [lp.set_eval_mode(eval) for lp in learning_profiles]
+
+    # Sort according to best score
+    sorted_list = sorted(learning_profiles, key=lambda lp: lp.get_score())
+
+    min_ = min(len(sorted_list), nr_models)
+    return sorted_list[:min_] if nr_models > -1 else sorted_list
+
+
+def retrieve_best_learning_profiles(learning_profiles=[], nr_models=-1):
+    """
+    Retrieve the 'nr_models' best learning profiles for all presentation modes.
+    Results are presented in a dictionary on the following format:
+        {
+            AL: {
+                'input_greedy_sampling': [lp1, lp2, lp3],
+                'output_greedy_sampling': [lp10, lp11, lp12]
+            },
+            ML: {
+                'linear_regression': [lp2, lp5, lp8],
+                'decision_tree': [lp20, lp22, lp24]
+            }, ...
+        }
+    where the list for a specific method is sorted by score and contains the
+    'nr_models' best learning profiles.
+
+    Args:
+        learning_profiles (list): List of learning profiles
+            (using LearningProfileDescription).
+        nr_models (int): number of models to include in plot.
+            Defaults to -1 (All models included).
+
+    Returns:
+        best_learning_profiles (dict): Dictionary containing the best learning
+        profiles for each presentation mode.
+    """
+    best_profiles = {}
+
+    # Get the specific learning profiles for all presentation modes
+    for pres_mode in Pres:
+        pres_name = pres_mode.name
+        pres_mode_LPs = get_specific_learning_profiles(
+            learning_profiles, pres_mode)
+
+        pres_dict = {}
+        for lps in pres_mode_LPs:
+            # Get name of attribute (get_specific_learning_profiles() sets
+            # pres_mode to enable the use of get_attr())
+            attr = lps[0].get_attr()
+
+            # Retrieve the 'nr_models' best learning profiles for
+            # evaluation mode MEAN.
+            pres_dict[attr] = sort_by_score(lps, Eval.MEAN, nr_models)
+
+        best_profiles[pres_name] = pres_dict
+    return best_profiles
 
 
 def print_id_name_for_learning_profiles(learning_profiles):
