@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
-from phase_utils import Eval, LearningProfileDescription, sort_by_score
+from phase_utils import EvaluationMode as Eval
+from phase_utils import sort_by_score
 
 
 def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
