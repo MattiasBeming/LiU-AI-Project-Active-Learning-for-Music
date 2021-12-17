@@ -2,7 +2,7 @@ from enum import Enum
 
 
 ###############################################################################
-# Evaluation Phase
+# Utilitiy
 ###############################################################################
 
 class Eval(Enum):
@@ -12,6 +12,15 @@ class Eval(Enum):
     AROUSAL = 0
     VALENCE = 1
     MEAN = 2
+
+
+class Pres(Enum):
+    """
+    Enum for Presentation mode.
+    """
+    AL = 0
+    ML = 1
+    DS = 2  # dataset
 
 
 class lpParser:
@@ -193,13 +202,28 @@ class lpParser:
 
 
 ###############################################################################
-# Presentation Phase
+# Help-functions
 ###############################################################################
 
-class Pres(Enum):
+def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
     """
-    Enum for Presentation mode.
+    Yield a list of learning profiles for every attribute for
+    Presentation mode.
+
+    Args:
+        learning_profiles (list): List of learning profiles (using lpParser).
+        pres (Enum): presentation mode. Defaults to Pres.AL.
     """
-    AL = 0
-    ML = 1
-    DS = 2  # dataset
+    # Set pres mode for all learning profiles
+    [lp.set_pres_mode(pres) for lp in learning_profiles]
+
+    # Loop through all attributes and yield the models with the same attribute
+    for attr in set([lp.get_attr() for lp in learning_profiles]):
+        # Retrieve all learning profiles with the same attribute
+        yield [lp for lp in learning_profiles if lp.get_attr() == attr]
+
+
+def print_id_name_for_learning_profiles(learning_profiles):
+    print("id -- Learning Profile")
+    for lp in learning_profiles:
+        print("id:", lp.get_id(), "--", f"{lp.get_name(True, False)}")

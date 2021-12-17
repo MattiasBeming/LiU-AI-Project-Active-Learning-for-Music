@@ -143,10 +143,3 @@ def load_all_learning_profiles(dir_path):
             lp = lpParser(id, lp_loaded)
             learning_profiles.append(lp)
     return learning_profiles
-
-
-def print_id_name_for_learning_profiles(learning_profiles):
-    print("id -- Learning Profile")
-    for lp in learning_profiles:
-        print("id:", lp.get_id(), "--",
-              f"{lp.get_name(True, False)}")
