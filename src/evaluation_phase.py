@@ -2,7 +2,8 @@ import numpy as np
 from pathlib import Path
 from os import listdir
 from datetime import datetime
-from phase_utils import Eval, LearningProfileDescription
+from phase_utils import EvaluationMode as Eval
+from phase_utils import LearningProfileDescription
 
 LP_FILE_NAME = 'lp'
 

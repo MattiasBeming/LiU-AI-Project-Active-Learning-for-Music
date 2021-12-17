@@ -5,7 +5,7 @@ from enum import Enum
 # Utilitiy
 ###############################################################################
 
-class Eval(Enum):
+class EvaluationMode(Enum):
     """
     Enum for Evaluation mode.
     """
@@ -14,7 +14,7 @@ class Eval(Enum):
     MEAN = 2
 
 
-class Pres(Enum):
+class PresentationMode(Enum):
     """
     Enum for Presentation mode.
     """
@@ -39,8 +39,9 @@ class LearningProfileDescription:
             id (String): id for the learning profile.
             profile (list): list of objects containing the data for the
                 learning profile read from disk.
-            eval (Enum): Enum for Evaluation mode. Defaults to None.
-            pres (Enum): Enum for Presentation mode. Defaults to None.
+            eval (EvaluationMode): Enum for Evaluation mode. Defaults to None.
+            pres (PresentationMode): Enum for Presentation mode.
+                Defaults to None.
         """
         self._id = id
         self._batch_size = profile[10]
@@ -81,17 +82,17 @@ class LearningProfileDescription:
         Updates the score and MSE parameters for the given evalution.
 
         Args:
-            eval (Enum): Enum for evaluation mode.
+            eval (EvaluationMode): Enum for evaluation mode.
         """
         self._eval = eval
 
-        if eval == Eval.AROUSAL:
+        if eval == EvaluationMode.AROUSAL:
             self._score = self._score_arousal
             self._MSE = self._MSE_arousal
-        elif eval == Eval.VALENCE:
+        elif eval == EvaluationMode.VALENCE:
             self._score = self._score_valence
             self._MSE = self._MSE_valence
-        elif eval == Eval.MEAN:
+        elif eval == EvaluationMode.MEAN:
             self._score = self._score_mean
             self._MSE = self._MSE_mean
 
@@ -101,15 +102,15 @@ class LearningProfileDescription:
         Updates the attribute parameter for the given presentation mode.
 
         Args:
-            pres (Enum): Enum for presentation mode.
+            pres (PresentationMode): Enum for presentation mode.
         """
         self._pres = pres
 
-        if pres == Pres.AL:
+        if pres == PresentationMode.AL:
             self._attr = self._al_func_name
-        elif pres == Pres.ML:
+        elif pres == PresentationMode.ML:
             self._attr = self._ml_func_name
-        elif pres == Pres.DS:
+        elif pres == PresentationMode.DS:
             self._attr = self._train_dataset_name
 
     def get_id(self):
@@ -209,7 +210,8 @@ class LearningProfileDescription:
 ###############################################################################
 
 
-def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
+def get_specific_learning_profiles(learning_profiles=[],
+                                   pres=PresentationMode.AL):
     """
     Yield a list of learning profiles for every attribute for the given
     Presentation mode.
@@ -217,7 +219,8 @@ def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
     Args:
         learning_profiles (list): List of learning profiles
             (using LearningProfileDescription).
-        pres (Enum): presentation mode. Defaults to Pres.AL.
+        pres (PresentationMode): presentation mode.
+            Defaults to PresentationMode.AL.
     """
     if not learning_profiles:
         raise ValueError("No learning profiles given")
@@ -231,7 +234,9 @@ def get_specific_learning_profiles(learning_profiles=[], pres=Pres.AL):
         yield [lp for lp in learning_profiles if lp.get_attr() == attr]
 
 
-def sort_by_score(learning_profiles=[], eval=Eval.MEAN, nr_models=-1):
+def sort_by_score(learning_profiles=[],
+                  eval=EvaluationMode.MEAN,
+                  nr_models=-1):
     """
     Given a list of learning profiles, sort them by score according to
     the eval method and return the first 'nr_models' profiles.
@@ -239,7 +244,8 @@ def sort_by_score(learning_profiles=[], eval=Eval.MEAN, nr_models=-1):
     Args:
         learning_profiles (list): List of learning profiles
             (using LearningProfileDescription).
-        eval (Enum): method of evaluation. Defaults to Eval.MEAN.
+        eval (EvaluationMode): method of evaluation.
+            Defaults to EvaluationMode.MEAN.
         nr_models (int): number of models to include in plot.
             Defaults to -1 (All models included).
 
@@ -290,7 +296,7 @@ def retrieve_best_learning_profiles(learning_profiles=[], nr_models=-1):
     best_profiles = {}
 
     # Get the specific learning profiles for all presentation modes
-    for pres_mode in Pres:
+    for pres_mode in PresentationMode:
         pres_name = pres_mode.name
         pres_mode_LPs = get_specific_learning_profiles(
             learning_profiles, pres_mode)
@@ -303,7 +309,8 @@ def retrieve_best_learning_profiles(learning_profiles=[], nr_models=-1):
 
             # Retrieve the 'nr_models' best learning profiles for
             # evaluation mode MEAN.
-            pres_dict[attr] = sort_by_score(lps, Eval.MEAN, nr_models)
+            pres_dict[attr] = sort_by_score(
+                lps, EvaluationMode.MEAN, nr_models)
 
         best_profiles[pres_name] = pres_dict
     return best_profiles
