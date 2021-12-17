@@ -1,9 +1,12 @@
 from enum import Enum
-
+from pathlib import Path
+import json
+import numpy as np
 
 ###############################################################################
-# Utilitiy
+# Classes
 ###############################################################################
+
 
 class EvaluationMode(Enum):
     """
@@ -205,8 +208,80 @@ class LearningProfileDescription:
         return f"lp-{self._id}"
 
 
+class AnnotationStation:
+    """
+    Used for saving label annotations for songs.
+    Reducing the need for annotating the same song more than once.
+
+    Annotations will be saved as a dictionsary in following format
+    for song ids 1 and 2::
+
+        {'1': [[arousal1], [valence1]], '2': [[arousal2], [valence2]]}
+    """
+
+    def __init__(self, path: Path):
+        """
+        AnnotationStation constructor.
+
+        Args:
+            path (Path): Path to dictionary in json format.
+                    (Note: include `.json` tag.)
+
+        Raises:
+            FileNotFoundError: When path is not correct.
+        """
+        self.path = path
+        if path.exists():
+            if path.is_file():
+                with open(path, "r") as f:
+                    self.annotations = json.loads(f.read())
+            else:
+                raise FileNotFoundError(f"{path} not a file!")
+        else:
+            self.annotations = dict()
+
+    def is_song_id_in_annotations(self, song_id: int):
+        """
+        Checks if `song_id` is already saved in annotations and
+        thus already annotated.
+
+        Args:
+            song_id (int): The song id to check for.
+
+        Returns:
+            bool: True if song id is in annotations.
+        """
+        return str(song_id) in self.annotations
+
+    def add_annotation(self, song_id: int, arousal: np.ndarray,
+                       valence: np.ndarray):
+        """
+        Add annotation of `song_id` to annotations dictionary,
+        followed by saving it to file using `save_annotations()`.
+
+        Args:
+            song_id (int): The song id to add.
+            arousal (np.ndarray): Dynamic arousal annotations, as a
+                column vector.
+            valence (np.ndarray): Dynamic valence annotations, as a
+                column vector.
+        """
+        self.annotations[str(song_id)] = np.array([arousal, valence]).tolist()
+        self.save_annotations()
+
+    def get_annotations(self):
+        return self.annotations
+
+    def save_annotations(self):
+        """
+        Save annotations to the json file specified
+        during construction.
+        """
+        with open(self.path, 'w') as f:
+            json.dump(self.annotations, f)
+
 ###############################################################################
-# Help-functions
+# Functions
 ###############################################################################
 
 
