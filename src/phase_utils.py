@@ -2,6 +2,7 @@ from enum import Enum
 from pathlib import Path
 import json
 import numpy as np
+from api.storage import Dataset
 
 ###############################################################################
 # Classes
@@ -399,3 +400,22 @@ def print_id_name_for_learning_profiles(learning_profiles):
     print("id -- Learning Profile")
     for lp in learning_profiles:
         print("id:", lp.get_id(), "--", f"{lp.get_name(True, False)}")
+
+
+def poll_seed_song_ids(full_train_ds: Dataset, seed_percent: float):
+    """
+    Get the song IDs of `seed_percent` percent of the
+    songs contained in `full_train_ds`.
+
+    Args:
+        full_train_ds (Dataset): The dataset to poll seed song IDs from.
+        seed_percent ([type]): The percent of songs to poll. Should be
+            in range [0,1].
+
+    Returns:
+        list: A list containing the polled song IDs.
+    """
+    unique_song_ids = np.unique(full_train_ds.get_contained_song_ids())
+    nr_tr = int(np.ceil(len(unique_song_ids)*seed_percent))
+    np.random.seed(42069)
+    return list(np.random.choice(unique_song_ids, nr_tr, replace=False))

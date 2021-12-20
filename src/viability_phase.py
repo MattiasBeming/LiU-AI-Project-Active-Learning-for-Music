@@ -1,5 +1,6 @@
 from threading import Thread
 from api.storage import Dataset
+from phase_utils import poll_seed_song_ids
 from learning_profile import LearningProfile
 from sklearn.metrics import mean_squared_error
 from tqdm import tqdm
@@ -131,22 +132,14 @@ def viability_phase(learning_profiles: list, num_iterations: int = -1,
     tqdm.write("All threads finished successfully!")
 
 
-def _seed_song_ids(full_train_ds, seed_percent):
-    unique_song_ids = np.unique(full_train_ds.get_contained_song_ids())
-    nr_tr = int(np.ceil(len(unique_song_ids)*seed_percent))
-    np.random.seed(42069)
-    return list(np.random.choice(unique_song_ids, nr_tr, replace=False))
-
-
 def _evaluate(lp: LearningProfile, num_iterations: int,
               seed_percent: float, thread_id: int):
     """
     Performs the following steps for the given learning profile:
-        1: Add first song from training dataset to a seed dataset.
-        2: Perform ML on this song to predict arousal/valence.
-        3: Perform AL to find novel songs in training dataset to
-            add to the seed dataset.
-        4: Add these songs to the seed dataset.
+        1: Add first songs from training dataset to a seed dataset.
+        2: Perform ML on these songs to predict arousal/valence.
+        3: Perform AL to find novel songs in training dataset.
+        4: Add these songs with labels to the seed dataset.
         5: Fit ML model to the seed dataset and predict on validation dataset
             to get MSE values for current iteration.
         6: Repeat 3-5 for a specified number of iterations: `num_iterations`.
@@ -156,7 +149,6 @@ def _evaluate(lp: LearningProfile, num_iterations: int,
         num_iterations (int): Number of evaluation iterations. Set to -1 if
             all training songs should be depleted.
         seed_percent (float): Percent of data to be used as seed.
-            Default is 0.1.
         thread_id (int): The ID of the calling thread.
 
     Returns:
@@ -182,11 +174,10 @@ def _evaluate(lp: LearningProfile, num_iterations: int,
     # Step 1 #
     ##########
 
-    # Initialize training songs with first song id
-    # Seed, percent
-    seed_song_ids = _seed_song_ids(full_train_ds, seed_percent)
+    # Initialize training songs with first seed song IDs
+    seed_song_ids = poll_seed_song_ids(full_train_ds, seed_percent)
 
-    # Mark all but the first song as unlabeled
+    # Mark all but the first seed songs as unlabeled
     unlabeled_train_song_ids = list(
         set(full_train_song_ids).difference(seed_song_ids))
 
