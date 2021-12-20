@@ -8,15 +8,18 @@ from api import ml
 import numpy as np
 
 
-BATCH_SIZE = 100
-
-
-def init_phase(sliding_window_length, model_eval=False):
+def init_phase(data_dir: Path, sliding_window_length: int,
+               batch_size: int = 100, model_eval: bool = False):
     """
     Initializes the Learning Profiles to be evaluated.
 
     Args:
+        data_dir (pathlib.Path): Should point to a directory where all `.csv`
+            and `.npy` files are located (`features_librosa_test_PCA.npy`,
+            `arousal_cont_average.csv` etc.).
         sliding_window_length (int): The length of the sliding-window.
+        batch_size (int, optional): The batch size to use for the Learning
+            Profiles. Defaults to 100.
         model_eval (bool, optional): A flag that signals whether to do
             model selection or model evaluation. Defaults to False.
 
@@ -79,8 +82,8 @@ def init_phase(sliding_window_length, model_eval=False):
         test = "test"
 
     for i in range(1, 8, 2):
-        load_train_test_datasets(i, train, test,  "PCA")
-        load_train_test_datasets(i+1, train, test,  "VT")
+        load_train_test_datasets(data_dir, i, train, test,  "PCA")
+        load_train_test_datasets(data_dir, i+1, train, test,  "VT")
 
     # ds1-2:
     # ds1 - PCA: train: no sw | test: no sw
@@ -112,7 +115,7 @@ def init_phase(sliding_window_length, model_eval=False):
     ###########################################################################
 
     lps = [LearningProfile(f"{ds}_train", f"{ds}_test", al_func,
-                           ml_func, hpars, BATCH_SIZE)
+                           ml_func, hpars, batch_size)
            for ds in datasets
            for al_func in al_funcs
            for (ml_func, hpars) in ml_funcs]
@@ -120,11 +123,13 @@ def init_phase(sliding_window_length, model_eval=False):
     return lps
 
 
-def load_train_test_datasets(id, train, test, feat_sel):
+def load_train_test_datasets(data_dir, id, train, test, feat_sel):
     """
     Loads train and test dataset into name "ds{id}_train" and "ds{id}_test".
 
     Args:
+        data_dir (pathlib.Path): Should point to a directory where all `.csv`
+            and `.npy` files are located.
         id (int): Desired id for the dataset.
         train (str): String identifying what data we use as training data
             (either "train" or "trainval).
@@ -135,20 +140,19 @@ def load_train_test_datasets(id, train, test, feat_sel):
     """
     load_dataset(
         f"ds{id}_train",
-        Path(
-            f"res/data/features_librosa_{train}_{feat_sel}.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
+        data_dir.joinpath(Path(f"features_librosa_{train}_{feat_sel}.npy")),
+        data_dir.joinpath(Path("arousal_cont_average.csv")),
+        data_dir.joinpath(Path("valence_cont_average.csv")),
+        data_dir.joinpath(Path("arousal_cont_std.csv")),
+        data_dir.joinpath(Path("valence_cont_std.csv"))
     )
     load_dataset(
         f"ds{id}_test",
-        Path(f"res/data/features_librosa_{test}_{feat_sel}.npy"),
-        Path("res/data/arousal_cont_average.csv"),
-        Path("res/data/valence_cont_average.csv"),
-        Path("res/data/arousal_cont_std.csv"),
-        Path("res/data/valence_cont_std.csv")
+        data_dir.joinpath(Path(f"features_librosa_{test}_{feat_sel}.npy")),
+        data_dir.joinpath(Path("arousal_cont_average.csv")),
+        data_dir.joinpath(Path("valence_cont_average.csv")),
+        data_dir.joinpath(Path("arousal_cont_std.csv")),
+        data_dir.joinpath(Path("valence_cont_std.csv"))
     )
 
 
@@ -171,10 +175,9 @@ def apply_sliding_window(id, window_len, train_prior, use_reg_prior=False):
     ds_test = get_dataset(f"ds{id}_test")
     if use_reg_prior:
         prior_feat = ds_test.get_first_n_samples_of_each_song(window_len)
-        print(prior_feat.shape)
         test_prior = format_pred_to_prior(
             temp_regressor.predict(prior_feat), window_len)
     else:
         test_prior = np.array([0])
     ds_test.sliding_window_test(
-        ml.linear_regression(ds_train), 5, test_prior)
+        ml.linear_regression(ds_train), window_len, test_prior)
