@@ -122,6 +122,26 @@ class Dataset():
             raise ValueError("Data was fetched before it was loaded. " +
                              "Do load_dataset() before calling get_dataset().")
 
+    def get_raw_data(self):
+        """
+        Returns the raw features of the dataset, i.e. without sliding window
+        features and without removing the samples used for prior.
+
+        Raises:
+            ValueError: If there was no feature data in this dataset.
+
+        Returns:
+            pandas.DataFrame: A 2D pandas dataframe. It has multi-indexed
+                columns, first level being 'song_id' and second level
+                'sample_no'. Header indexes 'feature_no'.
+        """
+        if self._data is not None:
+            return self._data.iloc[:, 0:(self.get_data_shape()[1]
+                                         - 2 * self.get_sliding_window_size())]
+        else:
+            raise ValueError("Data was fetched before it was loaded. " +
+                             "Do load_dataset() before calling get_dataset().")
+
     def get_first_n_samples_of_each_song(self, n):
         """
         Slices data to keep only the first n samples of each song.
