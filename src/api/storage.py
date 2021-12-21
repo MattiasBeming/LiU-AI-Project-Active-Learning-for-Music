@@ -491,6 +491,30 @@ class Dataset():
                     sample_num += 1
                 song_num += 1
 
+    def sliding_window_inherit(self, ds_to_inherit_from, alter=True):
+        """
+        Applies the sliding window properties from `ds_to_inherit_from`
+        to this dataset.
+
+        Args:
+            ds_to_inherit_from (Dataset): The dataset to inherit sliding
+                window properties from.
+            alter (bool): If True, this dataset is assumed to not currently
+                have any sliding window features in it. Thus, this dataset
+                will automatically be altered to form these extra set
+                of features. If False, the features are assumed to
+                already be present in the current data, and this function will
+                only alter the interpretation of it.
+        """
+        if alter:
+            self.sliding_window_train(
+                sliding_window=ds_to_inherit_from._sliding_window,
+                prior=ds_to_inherit_from._prior
+            )
+        else:
+            self._sliding_window = ds_to_inherit_from._sliding_window
+            self._prior = ds_to_inherit_from._prior
+
     def get_data_shape(self):
         return self.get_data().shape
 
