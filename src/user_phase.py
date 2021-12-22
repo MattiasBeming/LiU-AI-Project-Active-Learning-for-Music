@@ -1,6 +1,7 @@
 from sklearn.metrics import mean_squared_error
 from learning_profile import LearningProfile
 from phase_utils import poll_seed_song_ids
+from phase_utils import AnnotationStation
 from api.storage import Dataset
 from api import gui
 from pathlib import Path
@@ -8,6 +9,9 @@ import numpy as np
 from tqdm import tqdm
 
 from api.windows import QUERY_MODE_AROUSAL, QUERY_MODE_VALENCE
+
+
+ANNOTATION_STATION_FILE_PATH = Path("station.json")
 
 
 def user_phase(learning_profiles: list, data_dir: Path,
@@ -97,6 +101,10 @@ def _evaluate(lp: LearningProfile, data_dir: Path,
     # Get song ids of full training data
     full_train_song_ids = full_train_ds.get_contained_song_ids()
 
+    # Load annotation station
+    station = AnnotationStation(data_dir.joinpath(
+        ANNOTATION_STATION_FILE_PATH))
+
     ##########
     # Step 1 #
     ##########
@@ -166,22 +174,35 @@ def _evaluate(lp: LearningProfile, data_dir: Path,
             # Derive file path from song ID
             p = data_dir.joinpath(Path(f"{sID}.{audio_file_ext}"))
 
-            # Query arousal
-            ar_ref = gui.query_dynamic(p, QUERY_MODE_AROUSAL)
-            ar_res = gui.wait_result(ar_ref)
+            # Load or query annotations
+            ar_res = None
+            va_res = None
+            if not station.is_song_id_in_annotations(sID):
+                # Query arousal
+                ar_ref = gui.query_dynamic(p, QUERY_MODE_AROUSAL)
+                ar_res = gui.wait_result(ar_ref)[:, 1]
 
-            # Query valence
-            va_ref = gui.query_dynamic(p, QUERY_MODE_VALENCE)
-            va_res = gui.wait_result(va_ref)
+                # Query valence
+                va_ref = gui.query_dynamic(p, QUERY_MODE_VALENCE)
+                va_res = gui.wait_result(va_ref)[:, 1]
+
+                # Save to annotation station
+                station.add_annotation(sID, ar_res, va_res)
+            else:
+                # Load from annotation station
+                ar_res = np.array(station.get_annotations()[
+                                  str(sID)][0]).reshape((-1, 1))
+                va_res = np.array(station.get_annotations()[
+                                  str(sID)][1]).reshape((-1, 1))
 
             # Add song to seed dataset
             features_to_add = full_train_ds.get_raw_data().loc[[sID], :]
             seed_ds.add_songs(
                 features_to_add,
                 ar_res[features_to_add.index.get_level_values(1)
-                       .astype(np.int64), 1],
+                       .astype(np.int64)],
                 va_res[features_to_add.index.get_level_values(1)
-                       .astype(np.int64), 1]
+                       .astype(np.int64)]
             )
             seed_song_ids.append(sID)
 
