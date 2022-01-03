@@ -20,12 +20,17 @@ def create_datetime_subdir(dir_path):
     Args:
         dir_path (Path): Path to directory.
 
+    Raises:
+        ValueError: If `dir_path` exists, but is not a directory.
+
     Returns:
         dir_path (Path): New path to subdirectory.
     """
     if not dir_path.is_dir():
+        if dir_path.exists():
+            raise ValueError(f"Not a directory: '{dir_path}'")
         # Create dir
-        dir_path.mkdir()
+        dir_path.mkdir(parents=True, exist_ok=True)
 
     # Create subdirectory named after the current date and time
     date_time = datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
