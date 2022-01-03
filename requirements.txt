@@ -10,3 +10,4 @@ autopep8==1.5.7
 pycodestyle==2.7.0
 PySimpleGUI==4.47.0
 scikit-learn==1.0
+argparse==1.4.0
