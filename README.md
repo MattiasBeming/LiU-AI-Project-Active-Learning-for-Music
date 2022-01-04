@@ -1,59 +1,21 @@
 # Active Learning for Music
+AI-Project with Active Learning for music - developed by students at Linköping University.
 
-## Project Setup
+## Overview
 
-### Linux & Mac OS
+- [Active Learning for Music](#active-learning-for-music)
+  - [Overview](#overview)
+  - [Initial Setup](#initial-setup)
+  - [Acquire and Build Datasets](#acquire-and-build-datasets)
+  - [Run Code](#run-code)
 
-Before proceding it is recommended to install the `libasound-dev` system package (or `portaudio` for Mac OS), since `PyAudio` cannot compile without it.
 
-Once this is done, the following steps should be performed:
+## Initial Setup
+To be able to run Active Learning and Classification on the dataset(s), an initial setup needs to be performed; follow the steps provided in [setup.md](docs/setup.md).
 
-```bash
-# Clone the project
-git clone git@github.com:MattiasBeming/LiU-AI-Project-Active-Learning-for-Music.git
 
-# Change to project directory
-cd LiU-AI-Project-Active-Learning-for-Music
+## Acquire and Build Datasets
+Follow the instructions given in [dataset.md](docs/dataset.md) to acquire and build datasets.
 
-# Create a virutal environment
-python -m venv venv
-
-# Activate the environment
-source venv/bin/activate # may be 'venv/Scripts/activate'
-
-# Install required packages
-pip3 install -r requirements.txt
-```
-
-### Windows
-
-Windows users face the same problem that Linux users had with `PyAudio`. Instead of installing the library directly, it is therefore recommended to install the `pipwin` package. This package may then be used to install pre-compiled Windows binaries for `PyAudio`.
-
-Using `PowerShell`:
-
-```bash
-# Clone the project
-git clone git@github.com:MattiasBeming/LiU-AI-Project-Active-Learning-for-Music.git
-
-# Change to project directory
-cd LiU-AI-Project-Active-Learning-for-Music
-
-# Create a virutal environment
-python -m venv venv
-
-# Activate the environment
-./venv/Scripts/Activate.ps1
-
-# Install pipwin and pyaudio (skip if you want pip to compile the binaries on its own)
-pip3 install pipwin==0.5.1
-pipwin install pyaudio==0.2.11
-
-# Install remaining packages
-pip3 install -r requirements.txt
-```
-
-## FFMPEG Setup
-
-To allow different audio file formats the python package `pydub` is used. For playing mp3-files however, it is important that a valid mpeg-decoder is installed on the system. The `pydub` package defaults to using `libav` or `ffmpeg` if their binaries can be found on the system.
-
-To set this up properly for different platforms, follow the instructions on [pydub's GitHub page](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
+## Run Code
+Follow the instruction given in [run.md](docs/run.md).
