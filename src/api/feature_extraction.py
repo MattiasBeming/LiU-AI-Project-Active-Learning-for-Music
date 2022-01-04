@@ -9,12 +9,11 @@
 # This file was edited to work for emo-music in our project.
 # All credit for the core implementation is given to the original authors.
 
-# OBS, RUN THIS FILE FROM SRC FOLDER
+# OBS, RUN THIS FILE FROM API FOLDER
 import os
 import multiprocessing
 import warnings
 import numpy as np
-from numpy.core.defchararray import count
 from scipy import stats
 import pandas as pd
 import librosa
@@ -23,6 +22,7 @@ from pathlib import Path
 from pydub import AudioSegment
 import psutil
 import time
+from datetime import datetime
 
 
 def get_audio_path(audio_dir, song_id):
@@ -90,7 +90,7 @@ def save_npy(song_id):
         dir_path = Path('data/samples')
         if not dir_path.is_dir():
             # Create dir
-            dir_path.mkdir()
+            dir_path.mkdir(parents=True, exist_ok=True)
 
         filepath = dir_path / (str(song_id) + '.npy')
         np.save(filepath, samples)
@@ -301,7 +301,18 @@ def remove_songs_with_missing_data(features, n_samples):
 
 
 def save(features, ndigits):
-    features.to_csv('data/features_librosa.csv',
+    """
+    Saves the features dataframe to a .csv file with the name
+    'features_librosa_<date_time>.csv'.
+
+    Args:
+        features (pd.dataframe): Feature dataframe.
+        ndigits (int): Number of precision digits.
+    """
+    # Create file named after the current date and time
+    date_time = datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+
+    features.to_csv(f'data/features_librosa_{date_time}.csv',
                     float_format='%.{}e'.format(ndigits))
 
 
@@ -315,7 +326,7 @@ def test(features, n_samples):
     step (the function: remove_songs_with_missing_data()).
 
     Args:
-        features (pd.dataframe): feature dataframe.
+        features (pd.dataframe): Feature dataframe.
         n_samples (int): Number of samples in one song.
     """
     try:
@@ -344,7 +355,10 @@ def main():
     ###########################
 
     start_time = time.time()
-    os.chdir('./../')  # Change to parent directory
+    os.chdir('./../../')  # Set to root directory of the project
+
+    # Load metadata - note that the metadata is not used for anything other
+    # than retreiving the song ids
     filename = Path('data/emo-music-features/annotations/songs_info.csv')
     tracks = load(filename)
 
@@ -400,9 +414,6 @@ def main():
             features.loc[row.name] = row
         else:
             count += 1
-
-        if i % 10000 == 0:
-            save(features, 10)
 
     print(f"{count} NaN row(s) were found.")
 
