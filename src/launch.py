@@ -70,10 +70,10 @@ def _me_wrapper(name, argv):
     # Construct model evaluation parser
     parser = ArgumentParser(name)
     parser.add_argument("data_dir", type=str,
-                        help="a directory where all .csv and "
-                        ".npy files are located")
+                        help="a directory with the labels and features from "
+                        "feature selection")
     parser.add_argument("audio_dir", type=str,
-                        help="a directory where all audio files are located")
+                        help="a directory with audio files")
     parser.add_argument("input_dir", type=str,
                         help="a directory with Learning Profile results from "
                         "model_selection (usually "
@@ -133,11 +133,27 @@ def _me_wrapper(name, argv):
 
 def _pp_wrapper(name, argv):
     parser = ArgumentParser(name)
+    parser.add_argument("learning_profile_dir", type=str,
+                        help="a directory with Learning Profile results from "
+                        "either model_selection or model_evaluation")
+    parser.add_argument("-nm", "--n-models", dest='nm',
+                        metavar="n",
+                        type=int, default=-1,
+                        help="number of models to be included in plots "
+                        "(-1 all models included) (default: -1)")
 
+    # Parse arguments
+    args = parser.parse_args(argv)
 
+    # Execute presentation process
+    presentation_process(
+        learning_profile_dir=Path(args.learning_profile_dir),
+        n_models=args.nm
+    )
 ##########################
 # Core argument handling #
 ##########################
+
 
 # Process names
 processes = {
