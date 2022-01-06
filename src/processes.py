@@ -326,8 +326,7 @@ def presentation_process(learning_profile_dir: Path, n_lps: int):
             from either model_selection or model_evaluation.
         n_lps (int): Max number of Learning Profiles to include in plot,
             chooses the best performing ones.
-            (-1 all Learning Profiles included)
-            (-1 all models included).
+            (-1 all Learning Profiles included).
     """
     # get profiles
     lps_desc = load_all_learning_profiles(learning_profile_dir)
@@ -414,12 +413,13 @@ def presentation_process(learning_profile_dir: Path, n_lps: int):
                               " per presentation-mode-category-item "
                               "(a method/dataset from any of these "
                               "categories AL,ML,DS) "
-                              "to apply presentation-mode-filtering")
+                              "to apply presentation-mode-filtering"
+                              "(-1 means all Learning Profiles included)")
                         n = input("> ")
                         if "exit" == n:
                             quit = True
                             break
-                        if int(n) >= -1:
+                        elif int(n) == -1 or int(n) > 0:
                             n_lps_per_category_item = int(n)
                             break
 
