@@ -124,11 +124,11 @@ def _nested_dict_ids(nested):
 
 
 def _best_learning_profiles(input_dir: Path, learning_profiles: list,
-                            n_models_per_cat: int):
+                            n_lps_per_cat: int):
 
     # Load learning profile descriptions and choose best
     lp_descs = load_all_learning_profiles(input_dir)
-    lp_descs_best = retrieve_best_learning_profiles(lp_descs, n_models_per_cat)
+    lp_descs_best = retrieve_best_learning_profiles(lp_descs, n_lps_per_cat)
 
     # Use descriptions to retrieve actual learning profiles
     return [lp for lp in learning_profiles
@@ -195,7 +195,7 @@ def model_evaluation_process(data_dir: Path, input_dir: Path, output_dir: Path,
                              audio_dir: Path, sliding_window_length: int,
                              batch_size: int, num_iterations: int,
                              seed_percent: float, audio_file_ext: str,
-                             n_models_per_cat: int):
+                             n_lps_per_category_item: int):
     """
     Runs the model evaluation process.
 
@@ -214,8 +214,11 @@ def model_evaluation_process(data_dir: Path, input_dir: Path, output_dir: Path,
             to use before applying Active Learning.
         audio_file_ext (str): File extension of the audio files
             in `data_dir`.
-        n_models_per_cat (int): Number of models per category item
-            (AL/ML method etc.).
+        n_lps_per_category_item (int): The number of
+            best-performing-learning-profiles per
+            presentation-mode-category-item (a method/dataset from any of these
+            categories AL,ML,DS) to continue with from the
+            model selection phase.
 
     Raises:
         FileNotFoundError: If `input_dir` is not a valid directory.
@@ -243,7 +246,7 @@ def model_evaluation_process(data_dir: Path, input_dir: Path, output_dir: Path,
 
     # Get best learning profiles
     filtered_learning_profiles = _best_learning_profiles(
-        input_dir, learning_profiles, n_models_per_cat)
+        input_dir, learning_profiles, n_lps_per_category_item)
 
     # Pick what learning profiles to evaluate
     picked_learning_profiles = _pick_multiple_learning_profiles(
@@ -301,27 +304,29 @@ def model_evaluation_process(data_dir: Path, input_dir: Path, output_dir: Path,
 
 
 def _get_sorted_specific_learning_profiles(lps, eval_mode, pres_mode,
-                                           n_models_per_category_item):
+                                           n_lps_per_category_item):
     sorted_lps = []
     # Get all specific learning profiles
     for spec_lps in get_specific_learning_profiles(
             lps, pres_mode):
         # For each attribute, sort learning profiles by score
-        # and choose n_models_per_category_item nr of models per category item
+        # and choose n_lps_per_category_item nr of models per category item
         for lp in sort_by_score(spec_lps, eval_mode,
-                                n_models_per_category_item):
+                                n_lps_per_category_item):
             sorted_lps.append(lp)
     return sorted_lps
 
 
-def presentation_process(learning_profile_dir: Path, n_models: int):
+def presentation_process(learning_profile_dir: Path, n_lps: int):
     """
     Runs the model evaluation process.
 
     Args:
         learning_profile_dir (Path): A directory with Learning Profile results
             from either model_selection or model_evaluation.
-        n_models (int): Number of models to be included in plots
+        n_lps (int): Max number of Learning Profiles to include in plot,
+            chooses the best performing ones.
+            (-1 all Learning Profiles included)
             (-1 all models included).
     """
     # get profiles
@@ -333,7 +338,7 @@ def presentation_process(learning_profile_dir: Path, n_models: int):
     # Presentation Phase #
     ######################
     _phase_header("PRESENTATION PHASE")
-    print(f"In total there is {len(lps_desc)} Learning profiles.")
+    print(f"In total there are {len(lps_desc)} Learning profiles.")
 
     # Setup variables
     quit = False
@@ -376,9 +381,14 @@ def presentation_process(learning_profile_dir: Path, n_models: int):
         # Input prompt
         print("Pick presentation mode by writing the index of the wanted"
               " presentation mode.")
+        print("ML = Machine learning, AL = Active learning,"
+              " DS = Dataset.")
         for idx, pres_mode in enumerate(PresentationMode):
             print(f"{idx}:\t{pres_mode}")
-        print("Write 'all' to present all learning profiles.")
+        print(
+            f"Write 'all' to present {n_lps if n_lps > -1 else len(lps_desc)}"
+            " learning profiles."
+            " (No presentation-mode-filtering)")
         print("Write 'exit' to quit.")
 
         # Handle presentation mode input
@@ -392,34 +402,39 @@ def presentation_process(learning_profile_dir: Path, n_models: int):
                     lps_present = lps_desc
                     presentation_phase(learning_profiles=lps_present,
                                        eval=picked_eval,
-                                       nr_models=n_models)
+                                       nr_models=n_lps)
                     break
                 elif int(idx) >= 0 and int(idx) < len(PresentationMode):
 
-                    # Set nr of models per category item
-                    n_models_per_category_item = None
+                    # Set nr of learning profiles per category item
+                    n_lps_per_category_item = None
                     while True:
-                        print("Write the number of models per category item to"
-                              " use. Where the categories are AL/ML/DS, "
-                              "and category items is a specific "
-                              "AL/ML/DS method "
-                              "(-1 means all models)")
-                        n = int(input("> "))
-                        if n >= -1:
-                            n_models_per_category_item = n
+                        print("Write the number of "
+                              "best-performing-learning-profiles"
+                              " per presentation-mode-category-item "
+                              "(a method/dataset from any of these "
+                              "categories AL,ML,DS) "
+                              "to apply presentation-mode-filtering")
+                        n = input("> ")
+                        if "exit" == n:
+                            quit = True
                             break
+                        if int(n) >= -1:
+                            n_lps_per_category_item = int(n)
+                            break
+
+                    if quit:
+                        break
 
                     # Filter learning profiles given the arguments
                     lps_present = _get_sorted_specific_learning_profiles(
                         lps_desc, picked_eval, pres_modes[int(idx)],
-                        n_models_per_category_item)
-                    print(f"{len(lps_present)} out of {len(lps_desc)} Learning"
-                          " profiles will be used in the plot.")
+                        n_lps_per_category_item)
 
                     # Run presentation phase to plot the results
                     presentation_phase(learning_profiles=lps_present,
                                        eval=picked_eval,
-                                       nr_models=n_models)
+                                       nr_models=n_lps)
                     break
 
             except ValueError:
