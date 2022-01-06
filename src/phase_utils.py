@@ -267,8 +267,24 @@ class AnnotationStation:
             valence (np.ndarray): Dynamic valence annotations, as a
                 column vector.
         """
-        self.annotations[str(song_id)] = np.array([arousal, valence]).tolist()
-        self.save_annotations()
+        ar_dim = arousal.ndim
+        va_dim = valence.ndim
+        if ar_dim == 1 and va_dim == 1:
+            res = np.array([arousal, valence]).tolist()
+            if isinstance(res, list):
+                self.annotations[str(song_id)] = np.array(
+                    [arousal, valence]).tolist()
+                self.save_annotations()
+            else:
+                print(
+                    f"Song with id {song_id} could not be saved")
+                print(f"Can only dump objects of type lists to json")
+
+        else:
+            print(
+                f"Song with id {song_id} could not be saved")
+            print(
+                f"Vectors not dimension 1,(A {ar_dim}, V {va_dim})")
 
     def get_annotations(self):
         return self.annotations
