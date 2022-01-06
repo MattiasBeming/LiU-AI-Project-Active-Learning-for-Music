@@ -107,11 +107,14 @@ def _me_wrapper(name, argv):
                         type=str, default="mp3",
                         help="file extension of the audio files"
                         " in 'data_dir' (default: 'mp3')")
-    parser.add_argument("-nm", "--n-models-per-category-item", dest='nm',
+    parser.add_argument("-nlpc", "--n-lps-per-category-item", dest='nlpc',
                         metavar="n",
                         type=int, default=2,
-                        help="number of models per category item (AL/ML "
-                        "method etc.) (default: 2)")
+                        help="the number of best-performing-learning-profiles"
+                        " per presentation-mode-category-item(a method/dataset"
+                        " from any of these categories AL,ML,DS) to continue"
+                        " with from the model selection phase."
+                        " (default: 2)")
 
     # Parse arguments
     args = parser.parse_args(argv)
@@ -127,20 +130,21 @@ def _me_wrapper(name, argv):
         num_iterations=args.ni,
         seed_percent=args.sp,
         audio_file_ext=args.ae,
-        n_models_per_cat=args.nm
+        n_lps_per_category_item=args.nlpc
     )
 
 
-def _pp_wrapper(name, argv):
+def _p_wrapper(name, argv):
     parser = ArgumentParser(name)
     parser.add_argument("learning_profile_dir", type=str,
                         help="a directory with Learning Profile results from "
                         "either model_selection or model_evaluation")
-    parser.add_argument("-nm", "--n-models", dest='nm',
+    parser.add_argument("-nlp", "--n-lps", dest='nlp',
                         metavar="n",
                         type=int, default=-1,
-                        help="number of models to be included in plots "
-                        "(-1 all models included) (default: -1)")
+                        help="max number of Learning Profiles to include in"
+                        " plot, chooses the best performing ones "
+                        "(-1 all learning profiles included) (default: -1)")
 
     # Parse arguments
     args = parser.parse_args(argv)
@@ -148,7 +152,7 @@ def _pp_wrapper(name, argv):
     # Execute presentation process
     presentation_process(
         learning_profile_dir=Path(args.learning_profile_dir),
-        n_models=args.nm
+        n_lps=args.nlp
     )
 ##########################
 # Core argument handling #
@@ -159,7 +163,7 @@ def _pp_wrapper(name, argv):
 processes = {
     "model_selection": _ms_wrapper,
     "model_evaluation": _me_wrapper,
-    "presentation": _pp_wrapper
+    "presentation": _p_wrapper
 }
 
 # Parser core arguments

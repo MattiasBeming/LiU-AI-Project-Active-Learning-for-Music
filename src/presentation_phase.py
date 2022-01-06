@@ -12,7 +12,8 @@ def presentation_phase(learning_profiles=[], eval=Eval.AROUSAL, nr_models=-1):
         learning_profiles (list): List of learning profiles
             (using LearningProfileDescription).
         eval (Enum): method of evaluation. Defaults to Eval.AROUSAL.
-        nr_models (int): number of models to include in plot.
+        nr_models (int): Max number of models to include in plot, chooses the
+            best performing  'nr_models' models.
             Defaults to -1 (All models included).
     """
     if not learning_profiles:
