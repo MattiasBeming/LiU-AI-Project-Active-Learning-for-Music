@@ -11,8 +11,11 @@ from init_phase import init_phase
 from viability_phase import viability_phase
 from evaluation_phase import create_datetime_subdir, evaluation_phase
 from evaluation_phase import load_all_learning_profiles
-from phase_utils import retrieve_best_learning_profiles
+from phase_utils import retrieve_best_learning_profiles, EvaluationMode
+from phase_utils import PresentationMode, get_specific_learning_profiles
+from phase_utils import sort_by_score
 from user_phase import user_phase
+from presentation_phase import presentation_phase
 
 
 def _phase_header(header):
@@ -297,5 +300,131 @@ def model_evaluation_process(data_dir: Path, input_dir: Path, output_dir: Path,
     _phase_header("DONE")
 
 
-def presentation_process():
+def _get_sorted_specific_learning_profiles(lps, eval_mode, pres_mode,
+                                           n_models_per_category_item):
+    sorted_lps = []
+    # Get all specific learning profiles
+    for spec_lps in get_specific_learning_profiles(
+            lps, pres_mode):
+        # For each attribute, sort learning profiles by score
+        # and choose n_models_per_category_item nr of models per category item
+        for lp in sort_by_score(spec_lps, eval_mode,
+                                n_models_per_category_item):
+            sorted_lps.append(lp)
+    return sorted_lps
+
+
+def presentation_process(learning_profile_dir: Path, n_models: int):
+    """
+    Runs the model evaluation process.
+
+    Args:
+        learning_profile_dir (Path): A directory with Learning Profile results
+            from either model_selection or model_evaluation.
+        n_models (int): Number of models to be included in plots
+            (-1 all models included).
+    """
+    # get profiles
+    lps_desc = load_all_learning_profiles(learning_profile_dir)
+    # Copy
+    lps_present = lps_desc
+
+    ######################
+    # Presentation Phase #
+    ######################
+    _phase_header("PRESENTATION PHASE")
+    print(f"In total there is {len(lps_desc)} Learning profiles.")
+
+    # Setup variables
+    quit = False
+    picked_eval = None
+    eval_modes = [eval_mode for eval_mode in EvaluationMode]
+    pres_modes = [pres_mode for pres_mode in PresentationMode]
+
+    # Input loop to gather plot settings
+    while True:
+        _phase_header("PLOT SETTINGS")
+        ###################
+        # Evaluation mode #
+        ###################
+        # Input prompt
+        print("Pick evaluation mode by writing the index of the desired"
+              " evaluation mode.")
+        for idx, eval_mode in enumerate(EvaluationMode):
+            print(f"{idx}:\t{eval_mode}")
+        print("Write 'exit' to quit.")
+
+        # Handle evaluation mode input
+        while True:
+            try:
+                idx = input("> ")
+                if "exit" == idx:
+                    quit = True
+                    break
+                elif int(idx) >= 0 and int(idx) < len(EvaluationMode):
+                    picked_eval = eval_modes[int(idx)]
+                    break
+            except ValueError:
+                continue
+
+        if quit:
+            break
+
+        #####################
+        # Presentation mode #
+        #####################
+        # Input prompt
+        print("Pick presentation mode by writing the index of the wanted"
+              " presentation mode.")
+        for idx, pres_mode in enumerate(PresentationMode):
+            print(f"{idx}:\t{pres_mode}")
+        print("Write 'all' to present all learning profiles.")
+        print("Write 'exit' to quit.")
+
+        # Handle presentation mode input
+        while True:
+            try:
+                idx = input("> ")
+                if "exit" == idx:
+                    quit = True
+                    break
+                elif "all" == idx:
+                    lps_present = lps_desc
+                    presentation_phase(learning_profiles=lps_present,
+                                       eval=picked_eval,
+                                       nr_models=n_models)
+                    break
+                elif int(idx) >= 0 and int(idx) < len(PresentationMode):
+
+                    # Set nr of models per category item
+                    n_models_per_category_item = None
+                    while True:
+                        print("Write the number of models per category item to"
+                              " use. Where the categories are AL/ML/DS, "
+                              "and category items is a specific "
+                              "AL/ML/DS method "
+                              "(-1 means all models)")
+                        n = int(input("> "))
+                        if n >= -1:
+                            n_models_per_category_item = n
+                            break
+
+                    # Filter learning profiles given the arguments
+                    lps_present = _get_sorted_specific_learning_profiles(
+                        lps_desc, picked_eval, pres_modes[int(idx)],
+                        n_models_per_category_item)
+                    print(f"{len(lps_present)} out of {len(lps_desc)} Learning"
+                          " profiles will be used in the plot.")
+
+                    # Run presentation phase to plot the results
+                    presentation_phase(learning_profiles=lps_present,
+                                       eval=picked_eval,
+                                       nr_models=n_models)
+                    break
+
+            except ValueError:
+                continue
+
+        if quit:
+            break
     pass
