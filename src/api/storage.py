@@ -240,13 +240,14 @@ class Dataset():
         Adds sliding window features to the data using target labels. Three
         intended use cases exist:
             * Send in sliding_window > 1 and a prior of length 1, such as
-              np.array([0]). Then the prior used will an array of length
-              sliding_window with only zeros.
-            * Send in 2*sliding_window == len(prior), then the sent in prior
+              np.array([0]). Then the prior will be extended to an array of
+              length 2*sliding_window with only zeros.
+            * Send in 2*sliding_window == len(prior), then the given prior
               will be used.
-            * Send in sliding_window > 0 and empty prior, then the
-              sliding_window first target from arousal and valence will be used
-              as "priors". The corresponding data points will be "thrown away".
+            * Send in sliding_window > 0 and an empty prior, then the
+              sliding_window first targets from arousal and valence will be
+              used as "priors". The corresponding data points will be
+              "thrown away".
 
         Args:
             sliding_window (int): Number of previous samples to look at.
@@ -379,13 +380,13 @@ class Dataset():
 
     def sliding_window_test(self, regressor, sliding_window, prior):
         """
-        Adds sliding window features to the data using a given regressor. Three
-        intended use cases exist:
+        Adds sliding window features to the data set using a given regressor.
+        Three intended use cases exist:
             * Send in sliding_window > 1 and a prior of length 1, such as
-              np.array([0]). Then the prior used will an array of length
-              sliding_window with only zeros.
-            * Send in 2*sliding_window == len(prior), then the sent in prior
-              will be used.
+              np.array([0]). Then the prior will be extended to an array of
+              length 2*sliding_window with only zeros.
+            * Send in 2*sliding_window == len(prior), then the given prior
+              will be used as is.
             * Send in sliding_window > 0 and an array of priors, one for each
               song in the data. The sliding_window first samples of each song
               will be "thrown away".
