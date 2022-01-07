@@ -95,7 +95,7 @@ def init_phase(data_dir: Path, sliding_window_length: int,
     # ds4 - VT: sw w/ prior = 0 | test: prior = 0
     apply_sliding_window(4, sliding_window_length, np.array([0]))
 
-    # ds5 - PCA: sw w/ prior = T | test: prior = 0
+    # ds5 - PCA: sw w/ prior = Target Labels (T) | test: prior = 0
     apply_sliding_window(5, sliding_window_length, np.array([]))
 
     # ds6 - VT: sw w/ prior = T | test: prior = 0
