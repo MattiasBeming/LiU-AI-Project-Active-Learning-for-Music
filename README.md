@@ -1,13 +1,44 @@
 # Active Learning for Music
-AI-Project with Active Learning for music - developed by students at Linköping University.
+AI-Project with Active Learning for music - developed by students at Linköping University. The point of this project is to evaluate the efficiency of different Machine Learning models and query strategies for Active Learning - when used for predicting human emotion based on music listening experiences.
 
 ## Overview
-
 - [Active Learning for Music](#active-learning-for-music)
   - [Overview](#overview)
+  - [Architecture](#architecture)
+  - [Learning Profiles](#learning-profiles)
   - [Initial Setup](#initial-setup)
   - [Acquire and Build Datasets](#acquire-and-build-datasets)
   - [Run Code](#run-code)
+
+
+## Architecture
+The architecture can be divided into two different parts: the *API layer*, which consists of functionality for handling data, GUI, ML/AL etc. - and the *execution layer*, which is responsible for utilizing the API to perform required tasks. All code relating to the API may be found in `src/api/` while the execution code lies in `src/`.
+
+More specifically, the execution layer is devided into 5 different so called *processes*. When the program starts, one process is executed, and when the process terminates, so does the program. In order to communicate between processes, files are usually outputted so that they can be read between each other.
+
+Processes may consist of *phases*. These are reusable sub-modules, which are independent of each other, and processes may use any of these whenever desired. Note that phases can also be reused in different processes.
+
+There are 5 different processes, each represented by a green box in the figure below (the purple boxes represent phases):
+
+![architecture](docs/tdde19-architecture.png)
+
+The *Feature Extraction* and *Feature Selection* processes may be found in `src/api/features_extraction.py` and `src/api/feature_selection.py`. These are considered to be part of the setup, and should be executed according to [Acquire and Build Datasets](#acquire-and-build-datasets).
+
+The remaining processes are all found in `src/processes.py`. These may be launched through `src/launch.py` according to [Run Code](#run-code).
+
+Phases are located in their own separate files in `src/`.
+
+
+## Learning Profiles
+In order to evaluate the performance of different prediction strategies, this project creates so called *Learning Profiles*.
+
+A Learning Profile is an object that contains information about the following: what training and test datasets should be used for training and evaluation, what machine learning model should be trained and what active learning query strategy that should be used. The *init phase* is responsible for generating all Learning Profiles that are to be evaluated. For more information about evaluation, see [Run Code](#run-code).
+
+Note that by creating Learning Profiles that have different hyperparameters, but which are otherwise the same, the models are implicitly tuned.
+
+A few examples of what a Learning Profile can look like is shown in the table below:
+
+![learning-profile-examples](docs/lp_examples.png)
 
 
 ## Initial Setup
@@ -15,7 +46,8 @@ To be able to run Active Learning and Classification on the dataset(s), an initi
 
 
 ## Acquire and Build Datasets
-Read all of the instructions in [dataset.md](docs/dataset.md) to acquire and build datasets. Make sure that you perform both feature extraction, feature selection, and label adding.
+Read all of the instructions in [dataset.md](docs/dataset.md) to acquire and build datasets. Make sure that you perform both *feature extraction*, *feature selection*, and *label adding*.
+
 
 ## Run Code
-Follow the instruction given in [run.md](docs/run.md).
+Follow the instruction in [run.md](docs/run.md) to run *model selection*, *model evaluation*, and *presentation*.
