@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from enum import Enum
 import numpy as np
@@ -7,7 +6,13 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 
-# OBS, Run this file from api
+# Constants (paths are relative to python working directory).
+# See README.md for more info.
+FEATURES_LIBROSA_PATH = "data/features_librosa_yyyy-MM-dd_hh.mm.ss.csv"
+TRVA_SIZE = 0.8
+VA_SIZE = 0.25
+PCA_PERCENT = 0.99
+VT_THRESHOLD = 100
 
 
 class Method(Enum):
@@ -189,9 +194,11 @@ def feature_selection(filepath, trva_size=0.8, va_size=0.25, method=Method.PCA,
 
 
 def main():
-    os.chdir('./../')  # Change to parent directory
-    filepath = Path("./../data/features_librosa.csv")
-    feature_selection(filepath, 0.8, 0.25, Method.PCA, 0.99, 100)
+    filepath = Path(FEATURES_LIBROSA_PATH)
+    feature_selection(filepath, TRVA_SIZE, VA_SIZE,
+                      Method.PCA, PCA_PERCENT, None)
+    feature_selection(filepath, TRVA_SIZE, VA_SIZE,
+                      Method.VT, None, VT_THRESHOLD)
 
 
 if __name__ == "__main__":

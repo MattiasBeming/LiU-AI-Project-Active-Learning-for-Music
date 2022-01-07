@@ -9,8 +9,6 @@
 # This file was edited to work for emo-music in our project.
 # All credit for the core implementation is given to the original authors.
 
-# OBS, RUN THIS FILE FROM API FOLDER
-import os
 import multiprocessing
 import warnings
 import numpy as np
@@ -23,6 +21,11 @@ from pydub import AudioSegment
 import psutil
 import time
 from datetime import datetime
+
+# Path constants (relative to python working directory).
+# See README.md for more info.
+SONGS_INFO_PATH = "data/annotations/songs_info.csv"
+AUDIO_CLIP_DIR_PATH = "data/clips_45sec/clips_45seconds"
 
 
 def get_audio_path(audio_dir, song_id):
@@ -66,7 +69,7 @@ def load(filepath):
     tracks["Genre"] = tracks["Genre"].map(lambda s: s.strip())
     tracks["Genre"] = tracks["Genre"].astype('category')
 
-    return tracks
+    return tracks.iloc[0:20]
 
 
 def save_npy(song_id):
@@ -81,7 +84,7 @@ def save_npy(song_id):
         Tuple(int, float): Returns a tuple with song_id, sample rate.
     """
     try:
-        filedir = Path('data/emo-music-features/clips_45sec/clips_45seconds')
+        filedir = Path(AUDIO_CLIP_DIR_PATH)
         filepath = get_audio_path(filedir, song_id)
         sound = AudioSegment.from_file(filepath)
         samples = sound.get_array_of_samples()
@@ -355,11 +358,10 @@ def main():
     ###########################
 
     start_time = time.time()
-    os.chdir('./../../')  # Set to root directory of the project
 
     # Load metadata - note that the metadata is not used for anything other
     # than retreiving the song ids
-    filename = Path('data/emo-music-features/annotations/songs_info.csv')
+    filename = Path(SONGS_INFO_PATH)
     tracks = load(filename)
 
     n_samples = 91  # Number of samples (91 -> 0.5 seconds per sample)
