@@ -70,13 +70,15 @@ def _pick_multiple_learning_profiles(learning_profiles: list):
     picked_inds = []
     while True:
         # Print unpicked LPs
-        print("Learning Profiles to pick from:")
+        print(
+            "Learning Profiles to pick from: (Train DS, Test DS, AL, ML, "
+            "hyperparameters)")
         if len(picked_inds) == len(indexed_lps):
             print("\t-")
         else:
             for i, lp in indexed_lps.items():
                 if i not in picked_inds:
-                    print(f"\t{i}: {lp.get_id()}")
+                    print(f"\t{i}: {lp.get_name()}")
 
         # Print picked LPs
         print("Picked Learning Profiles:")
