@@ -15,7 +15,7 @@ To be able to run Active Learning and Classification on the dataset(s), an initi
 
 
 ## Acquire and Build Datasets
-Follow the instructions given in [dataset.md](docs/dataset.md) to acquire and build datasets.
+Read all of the instructions in [dataset.md](docs/dataset.md) to acquire and build datasets. Make sure that you perform both feature extraction, feature selection, and label adding.
 
 ## Run Code
 Follow the instruction given in [run.md](docs/run.md).

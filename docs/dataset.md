@@ -1,6 +1,6 @@
 # Dataset
 
-This file has information about the dataset used in this project and how features are extracted and selected.
+This file contains information about the dataset used for this project and how features are extracted and selected from it.
 
 Table of contents:
 - [Dataset](#dataset)
@@ -10,12 +10,13 @@ Table of contents:
     - [How to Run](#how-to-run)
   - [Feature Selection](#feature-selection)
     - [How to Run](#how-to-run-1)
+- [Adding Labels](#adding-labels)
 
 ## Acquire Data
 
 ### Emo-Music Dataset
 
-All credit are given to the authors of the following research paper:
+All credit is given to the authors of the following research paper:
 [1000 songs for emotional analysis of music](https://dl.acm.org/doi/10.1145/2506364.2506365).
 
 The dataset that was used in the project is called *Emotion in Music Database* and can be acquired [here](https://cvml.unige.ch/databases/emoMusic/).
@@ -59,21 +60,20 @@ This will result in a dataframe with 518 features using the Emo-music dataset.
 
 ### How to Run
 
-**Specify paths in `/src/api/feature_extraction.py`:**
-All paths are specified from root.
+**Specify paths by modifying the following constants in `/src/api/feature_extraction.py`:**
 
-- Path to `songs_info.csv` from the Emo-music dataset - located in `main()` \
-`filename = Path('data/emo-music-features/annotations/songs_info.csv')`
+- `SONGS_INFO_PATH` - path to `songs_info.csv` from the Emo-music dataset.
 
-- Path to directory containing all songs (mp3-files) - located in `save_npy()` \
-`filedir = Path('data/emo-music-features/clips_45sec/clips_45seconds')`
+- `AUDIO_CLIP_DIR_PATH` - path to directory containing all songs (mp3-files).
 
-**Navigate to the folder `/src/api/` from a terminal.** \
-Execute the following command: \
-`python .\feature_extraction.py`
+*Note that all paths should be relative to the python working directory - which should be the root directory of the project if you follow the instructions bellow.*
 
-**The Output-File will be located in:** \
-`data/` with the name `feature_extraction_<datetime>.csv`
+
+**Execute the following command to run the feature extraction:** \
+`python src/api/feature_extraction.py`
+
+**The features will be outputted as:** \
+`data/feature_extraction_<datetime>.csv`
 
 
 ## Feature Selection
@@ -85,33 +85,36 @@ More information can be found here:
 
 ### How to Run
 
-**Specify path in `/src/api/feature_selection.py`:**
-- Path (specified from root) to `features_librosa_<datetime>.csv` from the feature extraction step - located in `main()` \
-`filepath = Path("./../data/features_librosa.csv")`
+*Before running feature selection, make sure that features extraction has been successfully performed.*
 
-**Specify input parameters:**
-- trva_size - trva (training-validation) percentage of data \
+**Specify parameters by modifying the following constants in `/src/api/feature_selection.py`:**
+- `FEATURES_LIBROSA_PATH` - path to `features_librosa_<datetime>.csv` from the feature extraction step.
+
+- `TRVA_SIZE` - trva (training-validation) percentage of data \
 Default: 0.8
 
-- va_size - Validation percentage of trva \
+- `VA_SIZE` - Validation percentage of trva \
 Default: 0.25
 
-- method - Enum which dictates what feature selection to perform \
-Default: Method.PCA
-
-- pca_percent - Percentage of variance if PCA method is selected \
+- `PCA_PERCENT` - Percentage of variance for PCA selection \
 Default: 0.99
 
-- threshold - Variance threshold if VT method is selected \
+- `VT_threshold` - Variance threshold for VT selection \
 Default: 100
 
-**Navigate to the folder `/src/api/` from a terminal.** \
-Execute the following command: \
-`python .\feature_selection.py`
+*Note that all paths should be relative to the python working directory - which should be the root directory of the project if you follow the instructions bellow.*
 
-**The output-file will be located in** \
-the same directory as the file `features_librosa_<datetime>.csv` is located in \
-The files will have to following name: \
-`features_librosa_<datasplit>_<method-name>.npy` (numpy file-format)
+**Execute the following command to run the feature selection:** \
+`python src/api/feature_selection.py`
 
+**The features will be outputted as:** \
+`data/features_librosa_<datasplit>_<method-name>.npy` (numpy file-format)
 
+# Adding Labels
+When both *features extraction* and *features selection* has been performed there should be outputted feature files in the `data/` directory. The directory must also contain labels from the Emo-music dataset - but these have to be added by yourself.
+
+Copy the following files into the `data/` directory:
+- `annotations/arousal_cont_average.csv`
+- `annotations/arousal_cont_std.csv`
+- `annotations/valence_cont_average.csv`
+- `annotations/valence_cont_std.csv`

@@ -19,7 +19,7 @@ cd LiU-AI-Project-Active-Learning-for-Music
 # Create a virutal environment
 python -m venv venv
 
-# Activate the environment
+# Activate the environment (bash)
 source venv/bin/activate # may be 'venv/Scripts/activate'
 
 # Install required packages
@@ -42,19 +42,20 @@ cd LiU-AI-Project-Active-Learning-for-Music
 # Create a virutal environment
 python -m venv venv
 
-# Activate the environment
-./venv/Scripts/Activate.ps1
+# Activate the environment (powershell)
+./venv/Scripts/Activate.ps1 # for bash, see Linux section
 
 # Install pipwin and pyaudio (skip if you want pip to compile the binaries on its own)
 pip3 install pipwin==0.5.1
 pipwin install pyaudio==0.2.11
+# Try running 'pipwin refresh' if pyaudio cannot be found
 
 # Install remaining packages
 pip3 install -r requirements.txt
 ```
 
-# FFMPEG Setup
+# FFmpeg and Libav Setup
 
 To allow different audio file formats the python package `pydub` is used. For playing mp3-files however, it is important that a valid mpeg-decoder is installed on the system. The `pydub` package defaults to using `libav` or `ffmpeg` if their binaries can be found on the system.
 
-To set this up properly for different platforms, follow the instructions on [pydub's GitHub page](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up).
+To set this up properly for different platforms, follow the instructions on [pydub's GitHub page](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up). Note that these instructions only link to Windows binaries for `libav`; to download `ffmpeg` for Windows, go [here](https://www.ffmpeg.org/) instead (the `/bin` directory should still be added to the `PATH` environment variable).
