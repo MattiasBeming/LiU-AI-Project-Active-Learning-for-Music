@@ -167,6 +167,15 @@ class LearningProfile:
         """
         return self._MSE_valence
 
+    def get_name(self):
+        return (
+            f"{self._train_dataset_name}, "
+            f"{self._test_dataset_name}, "
+            f"{self._al_func.__name__}, "
+            f"{self._ml_func.__name__}, "
+            f"{self._hyper_parameters}"
+        )
+
     def __str__(self):
         return (
             f"LearningProfile("
