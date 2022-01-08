@@ -80,7 +80,7 @@ This will result in a dataframe with 518 features using the Emo-music dataset.
 Two types of feature selection methods are available at the moment; Principal Component Analysis (PCA) and Variance Threshold (VT).
 
 More information can be found here:
-- [PCA]([link](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html))
+- [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html)
 - [VT](https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html)
 
 ### How to Run
