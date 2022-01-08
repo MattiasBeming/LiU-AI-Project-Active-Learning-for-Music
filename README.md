@@ -53,7 +53,7 @@ The ability to add a *sliding window* of a user defined size to a data set exist
 
 For both training data and test data a prior must be chosen, the prior will act as labels/predictions for the first samples of each song in the train/test dataset when configuring the sliding window. The options for training data are, one prior for all songs and no prior at all. When no prior is passed, the labels from the first few samples are used as prior, and those samples are then not used during the training. The options for test data are either one prior for all songs or a different prior for each song. 
 
-Below is an illustration of how a sliding window size of *r* works on one song in the training data with a prior.
+Below is an illustration of how a sliding window size of *r* works on one song in the training data with a prior:
 
 ![learning-profile-examples](docs/sliding_window.png)
 
